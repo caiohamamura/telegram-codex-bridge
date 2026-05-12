@@ -8,6 +8,7 @@ import type {
   SessionRow,
   UiLanguage
 } from "../types.js";
+import { getTranslator } from "../i18n/index.js";
 import { truncateText } from "../util/text.js";
 import type { TelegramInlineKeyboardMarkup } from "./api.js";
 import {
@@ -291,41 +292,45 @@ export function buildStatusText(
   snapshot: ReadinessSnapshot,
   activeSession: SessionRow | null,
   runtimeStatusText?: string | null,
-  modelState?: SessionModelDisplayState | null
+  modelState?: SessionModelDisplayState | null,
+  language: UiLanguage = "zh"
 ): string {
-  const issueText = snapshot.details.issues.length === 0 ? "无" : snapshot.details.issues.join("；");
+  const LL = getTranslator(language);
+  const issueText = snapshot.details.issues.length === 0 ? LL.common.none() : snapshot.details.issues.join(language === "en" ? "; " : "；");
   const resolvedModelState = activeSession ? resolveModelDisplayState(activeSession, modelState ?? undefined) : null;
   const activeSessionText = activeSession
     ? [
         displayProjectName(activeSession.projectName, activeSession.projectAlias),
         activeSession.displayName,
-        formatSessionState(activeSession),
-        `配置 ${formatModelReasoning(
+        formatSessionState(activeSession, language),
+        `${LL.common.configured()} ${formatModelReasoning(
           resolvedModelState?.configuredModel ?? null,
-          resolvedModelState?.configuredReasoningEffort ?? null
+          resolvedModelState?.configuredReasoningEffort ?? null,
+          language
         )}`,
-        `生效 ${formatModelReasoning(
+        `${LL.common.effective()} ${formatModelReasoning(
           resolvedModelState?.effectiveModel ?? null,
-          resolvedModelState?.effectiveReasoningEffort ?? null
+          resolvedModelState?.effectiveReasoningEffort ?? null,
+          language
         )}`,
-        formatLastTurnSummary(activeSession)
+        formatLastTurnSummary(activeSession, language)
       ]
         .filter((value): value is string => Boolean(value))
         .join(" / ")
-    : "无";
+    : LL.common.none();
 
   const lines = [
-    formatHtmlHeading("服务状态"),
-    formatHtmlField("桥接状态：", snapshot.state),
-    formatHtmlField("平台连通：", snapshot.details.packState === "pack_unhealthy" ? "异常" : "正常"),
-    formatHtmlField("配置完成：", snapshot.details.setupState === "incomplete" ? "否" : "是"),
+    formatHtmlHeading(LL.status.title()),
+    formatHtmlField(LL.status.bridgeState(), snapshot.state),
+    formatHtmlField(LL.status.platformConnectivity(), snapshot.details.packState === "pack_unhealthy" ? LL.common.unhealthy() : LL.common.ok()),
+    formatHtmlField(LL.status.setupComplete(), snapshot.details.setupState === "incomplete" ? LL.common.no() : LL.common.yes()),
     formatHtmlField(
-      "Codex 可用：",
-      snapshot.details.codexAuthenticated && snapshot.details.appServerAvailable ? "正常" : "异常"
+      LL.status.codexAvailable(),
+      snapshot.details.codexAuthenticated && snapshot.details.appServerAvailable ? LL.common.ok() : LL.common.unhealthy()
     ),
-    formatHtmlField("当前会话：", activeSessionText),
-    formatHtmlField("最近检查：", snapshot.checkedAt),
-    formatHtmlField("问题：", issueText)
+    formatHtmlField(LL.status.currentSession(), activeSessionText),
+    formatHtmlField(LL.status.lastChecked(), snapshot.checkedAt),
+    formatHtmlField(LL.status.issues(), issueText)
   ];
 
   if (runtimeStatusText) {
@@ -335,29 +340,30 @@ export function buildStatusText(
   return lines.join("\n");
 }
 
-export function buildWhereText(session: SessionRow | null, modelState?: SessionModelDisplayState): string {
+export function buildWhereText(session: SessionRow | null, modelState?: SessionModelDisplayState, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   if (!session) {
-    return "当前没有活动会话。";
+    return LL.where.noActiveSession();
   }
 
   const state = resolveModelDisplayState(session, modelState);
   const lines = [
-    formatHtmlHeading("当前会话"),
-    formatHtmlField("会话名：", session.displayName),
-    formatHtmlField("项目：", displayProjectName(session.projectName, session.projectAlias)),
-    formatHtmlField("路径：", session.projectPath),
-    formatHtmlField("状态：", formatSessionState(session)),
-    formatHtmlField("模型配置：", formatModelReasoning(state.configuredModel, state.configuredReasoningEffort)),
-    formatHtmlField("模型生效：", formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort)),
+    formatHtmlHeading(LL.where.title()),
+    formatHtmlField(LL.where.sessionName(), session.displayName),
+    formatHtmlField(LL.where.project(), displayProjectName(session.projectName, session.projectAlias)),
+    formatHtmlField(LL.where.path(), session.projectPath),
+    formatHtmlField(LL.where.state(), formatSessionState(session, language)),
+    formatHtmlField(LL.where.modelConfigured(), formatModelReasoning(state.configuredModel, state.configuredReasoningEffort, language)),
+    formatHtmlField(LL.where.modelEffective(), formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort, language)),
     formatHtmlField("plan mode:", session.planMode ? "on" : "off")
   ];
 
-  lines.push(formatHtmlField("Bridge 会话 ID：", session.sessionId));
-  lines.push(formatHtmlField("Codex 线程 ID：", session.threadId ?? "尚未创建（首次发送任务后生成）"));
-  lines.push(formatHtmlField("最近 Turn ID：", session.lastTurnId ?? "暂无"));
-  const lastTurnSummary = formatLastTurnSummary(session);
+  lines.push(formatHtmlField(LL.where.bridgeSessionId(), session.sessionId));
+  lines.push(formatHtmlField(LL.where.codexThreadId(), session.threadId ?? LL.where.threadNotCreated()));
+  lines.push(formatHtmlField(LL.where.lastTurnId(), session.lastTurnId ?? LL.common.unavailable()));
+  const lastTurnSummary = formatLastTurnSummary(session, language);
   if (lastTurnSummary) {
-    lines.push(formatHtmlField("上次结果：", lastTurnSummary));
+    lines.push(formatHtmlField(LL.where.lastResult(), lastTurnSummary));
   }
 
   return lines.join("\n");
@@ -380,20 +386,23 @@ export function buildSessionsText(options: {
   sessions: SessionRow[];
   activeSessionId: string | null;
   archived?: boolean;
+  language?: UiLanguage;
 }): string {
-  const title = options.archived ? "已归档会话" : "最近会话";
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
+  const title: string = options.archived ? LL.sessions.archivedTitle() : LL.sessions.recentTitle();
   if (options.sessions.length === 0) {
-    return `${title}\n暂无会话。`;
+    return `${title}\n${LL.sessions.empty()}`;
   }
 
-  const lines = [title];
+  const lines: string[] = [title];
   options.sessions.forEach((session, index) => {
     const marker = !options.archived && session.sessionId === options.activeSessionId ? "[当前] " : "";
     const parts = [
       `${marker}${session.displayName}`,
       displayProjectName(session.projectName, session.projectAlias),
-      formatSessionState(session),
-      formatLastTurnSummary(session),
+      formatSessionState(session, language),
+      formatLastTurnSummary(session, language),
       formatRelativeTime(session.lastUsedAt)
     ].filter((value): value is string => Boolean(value));
 
@@ -653,19 +662,20 @@ export function buildUnsupportedCommandText(): string {
   return "这个命令还没开放。";
 }
 
-function formatSessionState(session: SessionRow): string {
+function formatSessionState(session: SessionRow, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   switch (session.status) {
     case "running":
-      return "执行中";
+      return LL.sessionState.running();
     case "interrupted":
-      return "已中断";
+      return LL.sessionState.interrupted();
     case "failed":
       return session.failureReason
-        ? `失败（${formatSessionFailureReason(session.failureReason)}）`
-        : "失败";
+        ? `${LL.sessionState.failed()}${language === "en" ? ` (${formatSessionFailureReason(session.failureReason, language)})` : `（${formatSessionFailureReason(session.failureReason, language)}）`}`
+        : LL.sessionState.failed();
     case "idle":
     default:
-      return "空闲";
+      return LL.sessionState.idle();
   }
 }
 
@@ -716,32 +726,36 @@ function formatSessionModelReasoningConfigForCard(state: SessionModelDisplayStat
   return `configured ${formatModelReasoningForCard(state.configuredModel, state.configuredReasoningEffort, language)} / effective ${formatModelReasoningForCard(state.effectiveModel, state.effectiveReasoningEffort, language)}`;
 }
 
-function formatSessionFailureReason(reason: SessionRow["failureReason"]): string {
+function formatSessionFailureReason(reason: SessionRow["failureReason"], language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   switch (reason) {
     case "bridge_restart":
-      return "桥接服务重启";
+      return LL.sessionState.failureBridgeRestart();
     case "app_server_lost":
-      return "Codex 服务断开";
+      return LL.sessionState.failureAppServerLost();
     case "turn_failed":
-      return "执行失败";
+      return LL.sessionState.failureTurnFailed();
     case "unknown":
     default:
-      return "未知原因";
+      return LL.sessionState.failureUnknown();
   }
 }
 
-function formatLastTurnSummary(session: SessionRow): string | null {
+function formatLastTurnSummary(session: SessionRow, language: UiLanguage = "zh"): string | null {
+  const LL = getTranslator(language);
   if (session.status === "running" || session.status === "failed" || session.status === "interrupted") {
     return null;
   }
 
   switch (session.lastTurnStatus) {
     case "completed":
-      return "上次已完成";
+      return LL.sessionState.lastCompleted();
     case "interrupted":
-      return "上次已中断";
+      return LL.sessionState.lastInterrupted();
     case "failed":
-      return session.failureReason ? `上次失败（${formatSessionFailureReason(session.failureReason)}）` : "上次失败";
+      return session.failureReason
+        ? `${LL.sessionState.lastFailed()}${language === "en" ? ` (${formatSessionFailureReason(session.failureReason, language)})` : `（${formatSessionFailureReason(session.failureReason, language)}）`}`
+        : LL.sessionState.lastFailed();
     default:
       return null;
   }
@@ -814,9 +828,10 @@ function resolveModelDisplayState(
   };
 }
 
-function formatModelReasoning(model: string | null, effort: ReasoningEffort | null): string {
-  const modelLabel = model ?? "默认模型";
-  const effortLabel = effort ? formatReasoningEffortLabel(effort) : "默认";
+function formatModelReasoning(model: string | null, effort: ReasoningEffort | null, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  const modelLabel = model ?? LL.common.defaultModel();
+  const effortLabel = effort ? formatReasoningEffortLabelForCard(effort, language) : LL.common.default();
   return `${modelLabel} + ${effortLabel}`;
 }
 

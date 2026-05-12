@@ -238,6 +238,36 @@ test("buildStatusText appends runtime status section when provided", () => {
   assert.doesNotMatch(text, /使用 \/inspect 查看完整详情/u);
 });
 
+test("buildStatusText renders deterministic bridge-owned fields in English", () => {
+  const text = buildStatusText(
+    createReadinessSnapshot({
+      details: {
+        codexInstalled: true,
+        codexAuthenticated: true,
+        appServerAvailable: true,
+        packState: "pack_unhealthy",
+        authorizedUserBound: true,
+        issues: []
+      }
+    }),
+    createSession({
+      displayName: "Session Alpha",
+      projectName: "Project One",
+      selectedModel: "gpt-5",
+      selectedReasoningEffort: "high"
+    }),
+    null,
+    null,
+    "en"
+  );
+
+  assert.match(text, /^<b>Service Status<\/b>/u);
+  assert.match(text, /<b>Platform connectivity:<\/b> Unhealthy/u);
+  assert.match(text, /<b>Setup complete:<\/b> Yes/u);
+  assert.match(text, /<b>Current session:<\/b> Project One \/ Session Alpha \/ idle \/ configured gpt-5 \+ high \/ effective gpt-5 \+ high \/ Last turn completed/u);
+  assert.doesNotMatch(text, /服务状态|平台连通|当前会话|配置|生效|上次已完成/u);
+});
+
 test("buildSessionsText renders active markers and state summaries for visible sessions", async () => {
   await withMockedNow("2026-03-10T10:10:00.000Z", () => {
     const text = buildSessionsText({
@@ -374,6 +404,29 @@ test("buildWhereText includes stable bridge and Codex identifiers when available
       "<b>上次结果：</b> 上次已完成"
     ].join("\n")
   );
+});
+
+test("buildWhereText renders bridge-owned labels in English", () => {
+  const text = buildWhereText(
+    createSession({
+      sessionId: "session-where",
+      threadId: null,
+      lastTurnId: null,
+      displayName: "Session Alpha",
+      projectName: "Project One",
+      projectPath: "/tmp/project-one",
+      status: "idle",
+      lastTurnStatus: "completed"
+    }),
+    undefined,
+    "en"
+  );
+
+  assert.match(text, /^<b>Current Session<\/b>/u);
+  assert.match(text, /<b>State:<\/b> idle/u);
+  assert.match(text, /<b>Codex thread ID:<\/b> Not created yet; generated after the first task/u);
+  assert.match(text, /<b>Last result:<\/b> Last turn completed/u);
+  assert.doesNotMatch(text, /当前会话|状态|尚未创建|上次已完成/u);
 });
 
 test("buildWhereText explains when the Codex thread has not been created yet", () => {

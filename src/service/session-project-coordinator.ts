@@ -580,7 +580,7 @@ export class SessionProjectCoordinator {
     const modelState = activeSession ? await this.deps.resolveSessionModelState(activeSession) : null;
     await this.deps.safeSendHtmlMessage(
       chatId,
-      buildStatusText(snapshot, activeSession, this.deps.getActiveRuntimeStatusText(chatId), modelState)
+      buildStatusText(snapshot, activeSession, this.deps.getActiveRuntimeStatusText(chatId), modelState, this.deps.getUiLanguage())
     );
   }
 
@@ -592,7 +592,7 @@ export class SessionProjectCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     const modelState = activeSession ? await this.deps.resolveSessionModelState(activeSession) : undefined;
-    await this.deps.safeSendHtmlMessage(chatId, buildWhereText(activeSession, modelState));
+    await this.deps.safeSendHtmlMessage(chatId, buildWhereText(activeSession, modelState, this.deps.getUiLanguage()));
   }
 
   async handleSessions(chatId: string, args: string): Promise<void> {
@@ -609,7 +609,8 @@ export class SessionProjectCoordinator {
       buildSessionsText({
         sessions,
         activeSessionId: activeSession?.sessionId ?? null,
-        archived
+        archived,
+        language: this.deps.getUiLanguage()
       })
     );
   }

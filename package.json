@@ -30,11 +30,13 @@
     "ctb": "./dist/cli.js"
   },
   "dependencies": {
-    "@larksuiteoapi/node-sdk": "^1.60.0"
+    "@larksuiteoapi/node-sdk": "^1.60.0",
+    "typesafe-i18n": "^5.27.1"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "dev": "tsx src/cli.ts",
+    "i18n:generate": "typesafe-i18n --no-watch",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "web:preview:start": "bash scripts/web-preview-start.sh",

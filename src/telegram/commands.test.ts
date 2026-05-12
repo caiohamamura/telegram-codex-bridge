@@ -5,6 +5,7 @@ import {
   TELEGRAM_COMMANDS,
   buildHelpText,
   getDefaultCommandPanelCommands,
+  getTelegramCommandPanelGroups,
   normalizeCommandPanelCommands,
   resolveTelegramCommandHandler,
   syncTelegramCommands
@@ -61,6 +62,17 @@ test("buildHelpText renders the English command surface when requested", () => {
   assert.ok(helpText.includes("/hub Bring back the runtime hub"));
   assert.ok(helpText.includes("/language Change bridge UI language"));
   assert.ok(helpText.endsWith("/cancel Cancel the current input and return"));
+});
+
+test("getTelegramCommandPanelGroups renders catalog-backed group labels", () => {
+  assert.deepEqual(
+    getTelegramCommandPanelGroups("zh").map((group) => group.label),
+    ["帮助与状态", "会话与项目", "Codex", "控制"]
+  );
+  assert.deepEqual(
+    getTelegramCommandPanelGroups("en").map((group) => group.label),
+    ["Help & Status", "Sessions & Projects", "Codex", "Control"]
+  );
 });
 
 test("resolveTelegramCommandHandler keeps aliases and synced commands aligned", () => {

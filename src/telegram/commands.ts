@@ -1,4 +1,5 @@
 import type { UiLanguage } from "../types.js";
+import { getTranslator } from "../i18n/index.js";
 import type { TelegramApi } from "./api.js";
 
 export type TelegramCommandHandlerKey =
@@ -147,11 +148,12 @@ export function normalizeCommandPanelCommands(commands: string[]): string[] {
 }
 
 export function getTelegramCommandPanelGroups(language: UiLanguage): TelegramCommandPanelGroupView[] {
+  const LL = getTranslator(language);
   const labels: Record<TelegramCommandPanelGroup, string> = {
-    help_status: language === "en" ? "Help & Status" : "帮助与状态",
-    session_project: language === "en" ? "Sessions & Projects" : "会话与项目",
-    codex: language === "en" ? "Codex" : "Codex",
-    control: language === "en" ? "Control" : "控制"
+    help_status: LL.commands.groups.helpStatus(),
+    session_project: LL.commands.groups.sessionProject(),
+    codex: LL.commands.groups.codex(),
+    control: LL.commands.groups.control()
   };
   const groups = new Map<TelegramCommandPanelGroup, TelegramCommandPanelEntry[]>();
 
@@ -215,7 +217,7 @@ export async function syncTelegramCommands(
 }
 
 export function buildHelpText(language: UiLanguage = "zh"): string {
-  const heading = language === "en" ? "Available commands" : "可用指令";
+  const heading = getTranslator(language).commands.heading();
   const lines = TELEGRAM_COMMAND_ENTRIES.flatMap(({ helpLines }) => helpLines.map((line) => line[language]));
 
   return [heading, ...lines].join("\n");
