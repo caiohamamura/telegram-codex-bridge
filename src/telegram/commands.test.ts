@@ -23,7 +23,10 @@ test("syncTelegramCommands syncs default and language-specific command scopes", 
     ) => {
       calls.push({ scope, languageCode });
       assert.equal(_commands.some((entry) => entry.command === "language"), true);
-      assert.equal(_commands.find((entry) => entry.command === "help")?.description, "Show full help");
+      assert.equal(
+        _commands.find((entry) => entry.command === "help")?.description,
+        languageCode === "zh" ? "查看完整帮助" : "Show full help"
+      );
     }
   } as any, "en");
 

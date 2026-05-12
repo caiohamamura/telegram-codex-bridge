@@ -204,12 +204,12 @@ export async function syncTelegramCommands(
     { type: "default" },
     { type: "all_private_chats" }
   ] as const;
-  const languageCodes = [undefined, "zh", "en"];
-  const commands = buildTelegramCommands(language);
+  const languageCodes: Array<UiLanguage | undefined> = [undefined, "zh", "en"];
 
   await Promise.all(
     scopes.flatMap((scope) =>
       languageCodes.map(async (languageCode) => {
+        const commands = buildTelegramCommands(languageCode ?? language);
         await api.setMyCommands(commands, scope, languageCode);
       })
     )
