@@ -111,6 +111,11 @@ import {
   syncTelegramCommands
 } from "./telegram/commands.js";
 import {
+  localizeTelegramCaptionOptions,
+  localizeTelegramReplyMarkup,
+  localizeTelegramText
+} from "./telegram/localize.js";
+import {
   DEFAULT_RUNTIME_STATUS_FIELDS,
   isOperationalReadinessState,
   type ReasoningEffort,
@@ -3652,7 +3657,11 @@ export class BridgeService {
     html: string,
     replyMarkup?: TelegramInlineKeyboardMarkup
   ): Promise<boolean> {
-    return this.getSafeMessenger()?.sendHtmlMessage(chatId, html, replyMarkup) ?? false;
+    return this.getSafeMessenger()?.sendHtmlMessage(
+      chatId,
+      this.localizeOutgoingText(html),
+      this.localizeOutgoingReplyMarkup(replyMarkup)
+    ) ?? false;
   }
 
   private async safeSendMessage(
@@ -3660,7 +3669,11 @@ export class BridgeService {
     text: string,
     replyMarkup?: TelegramInlineKeyboardMarkup
   ): Promise<boolean> {
-    return this.getSafeMessenger()?.sendMessage(chatId, text, replyMarkup) ?? false;
+    return this.getSafeMessenger()?.sendMessage(
+      chatId,
+      this.localizeOutgoingText(text),
+      this.localizeOutgoingReplyMarkup(replyMarkup)
+    ) ?? false;
   }
 
   private async safeSendMessageResult(
@@ -3668,7 +3681,11 @@ export class BridgeService {
     text: string,
     replyMarkup?: TelegramInlineKeyboardMarkup
   ): Promise<EgressMessageSendResult | null> {
-    return this.getSafeMessenger()?.sendMessageResult(chatId, text, replyMarkup) ?? null;
+    return this.getSafeMessenger()?.sendMessageResult(
+      chatId,
+      this.localizeOutgoingText(text),
+      this.localizeOutgoingReplyMarkup(replyMarkup)
+    ) ?? null;
   }
 
   private async safeEditMessageText(
@@ -3677,7 +3694,12 @@ export class BridgeService {
     text: string,
     replyMarkup?: TelegramInlineKeyboardMarkup
   ): Promise<TelegramEditResult> {
-    return this.getSafeMessenger()?.editMessageText(chatId, messageId, text, replyMarkup) ?? { outcome: "failed" };
+    return this.getSafeMessenger()?.editMessageText(
+      chatId,
+      messageId,
+      this.localizeOutgoingText(text),
+      this.localizeOutgoingReplyMarkup(replyMarkup)
+    ) ?? { outcome: "failed" };
   }
 
   private async safeSendHtmlMessageResult(
@@ -3685,7 +3707,11 @@ export class BridgeService {
     html: string,
     replyMarkup?: TelegramInlineKeyboardMarkup
   ): Promise<EgressMessageSendResult | null> {
-    return this.getSafeMessenger()?.sendHtmlMessageResult(chatId, html, replyMarkup) ?? null;
+    return this.getSafeMessenger()?.sendHtmlMessageResult(
+      chatId,
+      this.localizeOutgoingText(html),
+      this.localizeOutgoingReplyMarkup(replyMarkup)
+    ) ?? null;
   }
 
   private async safeSendPhoto(
@@ -3696,7 +3722,11 @@ export class BridgeService {
       parseMode?: "HTML";
     }
   ): Promise<boolean> {
-    return this.getSafeMessenger()?.sendPhoto(chatId, photoPath, options) ?? false;
+    return this.getSafeMessenger()?.sendPhoto(
+      chatId,
+      photoPath,
+      localizeTelegramCaptionOptions(options, this.getUiLanguage())
+    ) ?? false;
   }
 
   private async safeSendPhotoResult(
@@ -3707,7 +3737,11 @@ export class BridgeService {
       parseMode?: "HTML";
     }
   ): Promise<EgressMessageSendResult | null> {
-    return this.getSafeMessenger()?.sendPhotoResult(chatId, photoPath, options) ?? null;
+    return this.getSafeMessenger()?.sendPhotoResult(
+      chatId,
+      photoPath,
+      localizeTelegramCaptionOptions(options, this.getUiLanguage())
+    ) ?? null;
   }
 
   private async safeSendDocumentResult(
@@ -3719,7 +3753,11 @@ export class BridgeService {
       fileName?: string;
     }
   ): Promise<EgressMessageSendResult | null> {
-    return this.getSafeMessenger()?.sendDocumentResult(chatId, filePath, options) ?? null;
+    return this.getSafeMessenger()?.sendDocumentResult(
+      chatId,
+      filePath,
+      localizeTelegramCaptionOptions(options, this.getUiLanguage())
+    ) ?? null;
   }
 
   private async safeSendTelegramMessageResult(
@@ -3733,7 +3771,10 @@ export class BridgeService {
       failureMessage: string;
     }
   ): Promise<EgressMessageSendResult | null> {
-    return this.getSafeMessenger()?.sendPlatformMessage(chatId, text, options) ?? null;
+    return this.getSafeMessenger()?.sendPlatformMessage(chatId, this.localizeOutgoingText(text), {
+      ...options,
+      ...(options.replyMarkup !== undefined ? { replyMarkup: this.localizeOutgoingReplyMarkup(options.replyMarkup) } : {})
+    }) ?? null;
   }
 
   private async safeEditHtmlMessageText(
@@ -3742,7 +3783,12 @@ export class BridgeService {
     html: string,
     replyMarkup?: TelegramInlineKeyboardMarkup
   ): Promise<TelegramEditResult> {
-    return this.getSafeMessenger()?.editHtmlMessageText(chatId, messageId, html, replyMarkup) ?? { outcome: "failed" };
+    return this.getSafeMessenger()?.editHtmlMessageText(
+      chatId,
+      messageId,
+      this.localizeOutgoingText(html),
+      this.localizeOutgoingReplyMarkup(replyMarkup)
+    ) ?? { outcome: "failed" };
   }
 
   private async replaceBridgeOwnedMessage(
@@ -3754,7 +3800,12 @@ export class BridgeService {
       replyMarkup?: TelegramInlineKeyboardMarkup;
     }
   ): Promise<boolean> {
-    return this.getSafeMessenger()?.replaceMessage(chatId, messageId, text, options) ?? false;
+    return this.getSafeMessenger()?.replaceMessage(chatId, messageId, this.localizeOutgoingText(text), options
+      ? {
+          ...options,
+          ...(options.replyMarkup !== undefined ? { replyMarkup: this.localizeOutgoingReplyMarkup(options.replyMarkup) } : {})
+        }
+      : undefined) ?? false;
   }
 
   private async replaceBridgeOwnedHtmlMessageResult(
@@ -3763,11 +3814,29 @@ export class BridgeService {
     html: string,
     replyMarkup?: TelegramInlineKeyboardMarkup
   ): Promise<number | null> {
-    return this.getSafeMessenger()?.replaceHtmlMessageResult(chatId, messageId, html, replyMarkup) ?? null;
+    return this.getSafeMessenger()?.replaceHtmlMessageResult(
+      chatId,
+      messageId,
+      this.localizeOutgoingText(html),
+      this.localizeOutgoingReplyMarkup(replyMarkup)
+    ) ?? null;
   }
 
   private async safeAnswerCallbackQuery(callbackQueryId: string, text?: string): Promise<void> {
-    await this.getSafeMessenger()?.answerCallbackQuery(callbackQueryId, text);
+    await this.getSafeMessenger()?.answerCallbackQuery(
+      callbackQueryId,
+      text === undefined ? undefined : this.localizeOutgoingText(text)
+    );
+  }
+
+  private localizeOutgoingText(text: string): string {
+    return localizeTelegramText(text, this.getUiLanguage());
+  }
+
+  private localizeOutgoingReplyMarkup(
+    replyMarkup: TelegramInlineKeyboardMarkup | undefined
+  ): TelegramInlineKeyboardMarkup | undefined {
+    return localizeTelegramReplyMarkup(replyMarkup, this.getUiLanguage());
   }
 
   private getUiLanguage(): UiLanguage {
