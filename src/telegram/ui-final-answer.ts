@@ -1,6 +1,8 @@
 import type { StreamBlock, StreamSnapshot } from "../activity/types.js";
 import type { RecentOutputEntryView, TerminalResultControlView } from "../core/interaction-model/terminal.js";
 import { truncateText } from "../util/text.js";
+import type { UiLanguage } from "../types.js";
+import { getTranslator } from "../i18n/index.js";
 import type { TelegramInlineKeyboardMarkup } from "./api.js";
 import {
   encodeFinalAnswerCloseCallback,
@@ -94,8 +96,11 @@ export function buildCollapsibleFinalAnswerView(
   options?: {
     sessionName?: string | null;
     projectName?: string | null;
+    language?: UiLanguage;
   }
 ): FinalAnswerViewRender {
+  const language = options?.language ?? "zh";
+  const LL = getTranslator(language);
   const headerHtml = buildFinalAnswerIdentityHeader(options);
   const rawPages = renderFinalAnswerHtmlChunks(markdown, 3000, { prefixContinuations: false });
   const pages = rawPages.map((page, index) => {
@@ -104,7 +109,7 @@ export function buildCollapsibleFinalAnswerView(
       parts.push(headerHtml);
     }
     if (rawPages.length > 1) {
-      parts.push(`<i>第 ${index + 1}/${rawPages.length} 页</i>`);
+      parts.push(`<i>${LL.finalAnswer.pagePrefix()}${index + 1}/${rawPages.length}${LL.finalAnswer.pageSuffix()}</i>`);
     }
     if (page) {
       parts.push(page);
@@ -121,9 +126,10 @@ export function buildCollapsibleFinalAnswerView(
     };
   }
 
+  const expandLabel = LL.finalAnswer.expandFull();
   const note = rawPages.length > 1
-    ? `已折叠，共 ${rawPages.length} 页，点击“展开全文”查看。`
-    : "已折叠，点击“展开全文”查看剩余内容。";
+    ? `${LL.finalAnswer.collapsedMultiPagePrefix()}${rawPages.length}${LL.finalAnswer.collapsedMultiPageMiddle()}"${expandLabel}"${LL.finalAnswer.collapsedMultiPageSuffix()}`
+    : `${LL.finalAnswer.collapsedSinglePrefix()}"${expandLabel}"${LL.finalAnswer.collapsedSingleSuffix()}`;
 
   return {
     previewHtml: [
@@ -139,14 +145,17 @@ export function buildCollapsibleFinalAnswerView(
 export function buildFinalAnswerReplyMarkup(
   options: TerminalResultControlView & {
     extraRows?: Array<Array<{ text: string; callback_data: string }>>;
+    language?: UiLanguage;
   }
 ): TelegramInlineKeyboardMarkup {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   if (!options.expanded) {
     return {
       inline_keyboard: [
         ...(options.extraRows ?? []),
         [{
-          text: "展开全文",
+          text: LL.finalAnswer.expandFull(),
           callback_data: encodeFinalAnswerOpenCallback(options.answerId)
         }]
       ]
@@ -156,20 +165,20 @@ export function buildFinalAnswerReplyMarkup(
   const buttons: Array<{ text: string; callback_data: string }> = [];
   if (options.totalPages > 1 && options.currentPage && options.currentPage > 1) {
     buttons.push({
-      text: "上一页",
+      text: LL.common.previousPage(),
       callback_data: encodeFinalAnswerPageCallback(options.answerId, options.currentPage - 1)
     });
   }
 
   if (options.totalPages > 1 && options.currentPage && options.currentPage < options.totalPages) {
     buttons.push({
-      text: "下一页",
+      text: LL.common.nextPage(),
       callback_data: encodeFinalAnswerPageCallback(options.answerId, options.currentPage + 1)
     });
   }
 
   buttons.push({
-    text: "收起",
+    text: LL.finalAnswer.collapse(),
     callback_data: encodeFinalAnswerCloseCallback(options.answerId)
   });
 
@@ -181,38 +190,44 @@ export function buildFinalAnswerReplyMarkup(
   };
 }
 
-export function buildPlanResultActionRows(answerId: string): Array<Array<{ text: string; callback_data: string }>> {
+export function buildPlanResultActionRows(answerId: string, language: UiLanguage = "zh"): Array<Array<{ text: string; callback_data: string }>> {
+  const LL = getTranslator(language);
   return [[
-    { text: "实施这个计划", callback_data: encodePlanImplementCallback(answerId) }
+    { text: LL.finalAnswer.implementPlan(), callback_data: encodePlanImplementCallback(answerId) }
   ]];
 }
 
-export function buildRecentOutputEntryHtml(options: RecentOutputEntryView): string {
+export function buildRecentOutputEntryHtml(options: RecentOutputEntryView & { language?: UiLanguage }): string {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const identity = buildFinalAnswerIdentityHeader({
     ...(options.sessionName !== undefined ? { sessionName: options.sessionName } : {}),
     ...(options.projectName !== undefined ? { projectName: options.projectName } : {})
   });
 
   return [
-    "<b>最近输出</b>",
+    `<b>${LL.finalAnswer.recentOutput()}</b>`,
     identity,
     options.hasResult
-      ? "<i>点击“展开最近输出”查看该会话最近一次输出。</i>"
-      : "<i>该会话还没有最近输出。</i>"
+      ? `<i>${LL.finalAnswer.expandRecentOutputHint()}</i>`
+      : `<i>${LL.finalAnswer.noRecentOutput()}</i>`
   ].filter((part) => part.length > 0).join("\n\n");
 }
 
 export function buildRecentOutputReplyMarkup(
   options: TerminalResultControlView & {
     extraRows?: Array<Array<{ text: string; callback_data: string }>>;
+    language?: UiLanguage;
   }
 ): TelegramInlineKeyboardMarkup {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   if (!options.expanded) {
     return {
       inline_keyboard: [
         ...(options.extraRows ?? []),
         [{
-          text: "展开最近输出",
+          text: LL.finalAnswer.expandRecentOutput(),
           callback_data: encodeRecentOutputOpenCallback(options.answerId)
         }]
       ]
@@ -222,18 +237,18 @@ export function buildRecentOutputReplyMarkup(
   const buttons: Array<{ text: string; callback_data: string }> = [];
   if (options.totalPages > 1 && options.currentPage && options.currentPage > 1) {
     buttons.push({
-      text: "上一页",
+      text: LL.common.previousPage(),
       callback_data: encodeRecentOutputPageCallback(options.answerId, options.currentPage - 1)
     });
   }
   if (options.totalPages > 1 && options.currentPage && options.currentPage < options.totalPages) {
     buttons.push({
-      text: "下一页",
+      text: LL.common.nextPage(),
       callback_data: encodeRecentOutputPageCallback(options.answerId, options.currentPage + 1)
     });
   }
   buttons.push({
-    text: "收起最近输出",
+    text: LL.finalAnswer.collapseRecentOutput(),
     callback_data: encodeRecentOutputCloseCallback(options.answerId)
   });
 
@@ -245,14 +260,16 @@ export function buildRecentOutputReplyMarkup(
   };
 }
 
-export function buildPlanResultReplyMarkup(options: TerminalResultControlView): TelegramInlineKeyboardMarkup {
-  const actionRows = options.primaryActionConsumed ? [] : buildPlanResultActionRows(options.answerId);
+export function buildPlanResultReplyMarkup(options: TerminalResultControlView & { language?: UiLanguage }): TelegramInlineKeyboardMarkup {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
+  const actionRows = options.primaryActionConsumed ? [] : buildPlanResultActionRows(options.answerId, language);
   if (!options.expanded) {
     return {
       inline_keyboard: [
         ...actionRows,
         [{
-          text: "展开方案",
+          text: LL.finalAnswer.expandPlan(),
           callback_data: encodePlanResultOpenCallback(options.answerId)
         }]
       ]
@@ -262,18 +279,18 @@ export function buildPlanResultReplyMarkup(options: TerminalResultControlView): 
   const buttons: Array<{ text: string; callback_data: string }> = [];
   if (options.totalPages > 1 && options.currentPage && options.currentPage > 1) {
     buttons.push({
-      text: "上一页",
+      text: LL.common.previousPage(),
       callback_data: encodePlanResultPageCallback(options.answerId, options.currentPage - 1)
     });
   }
   if (options.totalPages > 1 && options.currentPage && options.currentPage < options.totalPages) {
     buttons.push({
-      text: "下一页",
+      text: LL.common.nextPage(),
       callback_data: encodePlanResultPageCallback(options.answerId, options.currentPage + 1)
     });
   }
   buttons.push({
-    text: "收起方案",
+    text: LL.finalAnswer.collapsePlan(),
     callback_data: encodePlanResultCloseCallback(options.answerId)
   });
 
@@ -285,8 +302,8 @@ export function buildPlanResultReplyMarkup(options: TerminalResultControlView): 
   };
 }
 
-export function buildPlanResultConsumedNotice(): string {
-  return "<i>已开始实施。</i>";
+export function buildPlanResultConsumedNotice(language: UiLanguage = "zh"): string {
+  return `<i>${getTranslator(language).finalAnswer.planConsumed()}</i>`;
 }
 
 export function renderStreamBlock(block: StreamBlock): string {

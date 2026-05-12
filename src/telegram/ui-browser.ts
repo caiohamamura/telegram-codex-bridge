@@ -1,4 +1,5 @@
 import type { UiLanguage } from "../types.js";
+import { getTranslator } from "../i18n/index.js";
 import type { TelegramInlineKeyboardMarkup } from "./api.js";
 import {
   encodeBrowseBackCallback,
@@ -19,68 +20,6 @@ export interface ProjectBrowserDirectoryEntryView {
   name: string;
   kind: "directory" | "file" | "symlink";
   sizeLabel: string | null;
-}
-
-function browserCopy(language: UiLanguage) {
-  return language === "en"
-    ? {
-        title: "File Browser",
-        project: "Project:",
-        location: "Location:",
-        page: "Page:",
-        mode: "Mode:",
-        readonly: "Read-only browser",
-        root: "Project Root",
-        empty: "This directory is empty.",
-        previous: "Previous",
-        next: "Next",
-        up: "Up",
-        backToRoot: "Project Root",
-        refresh: "Refresh",
-        useCurrentDirectory: "Use Current Directory",
-        close: "Close",
-        previewTitle: "File Preview",
-        file: "File:",
-        path: "Path:",
-        size: "Size:",
-        modified: "Modified:",
-        previewPage: "Preview Page:",
-        previewTruncated: "Previewing only the first 48 KB.",
-        returnToDirectory: "Back to Directory",
-        infoTitle: "File Info",
-        type: "Type:",
-        binary: "Binary or unsupported preview",
-        imagePreview: "Image Preview"
-      }
-    : {
-        title: "文件浏览",
-        project: "当前项目：",
-        location: "当前位置：",
-        page: "页码：",
-        mode: "模式：",
-        readonly: "只读浏览",
-        root: "项目根",
-        empty: "当前目录为空。",
-        previous: "上一页",
-        next: "下一页",
-        up: "上一级",
-        backToRoot: "回到项目根",
-        refresh: "刷新",
-        useCurrentDirectory: "在当前目录新建会话",
-        close: "关闭",
-        previewTitle: "文件预览",
-        file: "文件：",
-        path: "路径：",
-        size: "大小：",
-        modified: "修改时间：",
-        previewPage: "预览页：",
-        previewTruncated: "仅预览前 48 KB。",
-        returnToDirectory: "返回目录",
-        infoTitle: "文件信息",
-        type: "类型：",
-        binary: "二进制或暂不支持预览",
-        imagePreview: "图片预览"
-      };
 }
 
 function entryListLabel(entry: ProjectBrowserDirectoryEntryView): string {
@@ -113,7 +52,7 @@ export function buildProjectBrowserDirectoryMessage(options: {
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
   const language = options.language ?? "zh";
-  const copy = browserCopy(language);
+  const LL = getTranslator(language);
   const rows: TelegramInlineKeyboardMarkup["inline_keyboard"] = options.entries.map((entry) => [{
     text: entryButtonLabel(entry),
     callback_data: encodeBrowseOpenCallback(options.token, entry.index)
@@ -122,13 +61,13 @@ export function buildProjectBrowserDirectoryMessage(options: {
   const pagerRow: Array<{ text: string; callback_data: string }> = [];
   if (options.page > 0) {
     pagerRow.push({
-      text: copy.previous,
+      text: LL.common.previousPage(),
       callback_data: encodeBrowsePageCallback(options.token, options.page - 1)
     });
   }
   if (options.page + 1 < options.totalPages) {
     pagerRow.push({
-      text: copy.next,
+      text: LL.common.nextPage(),
       callback_data: encodeBrowsePageCallback(options.token, options.page + 1)
     });
   }
@@ -138,32 +77,32 @@ export function buildProjectBrowserDirectoryMessage(options: {
 
   if (options.canGoUp) {
     rows.push([
-      { text: copy.up, callback_data: encodeBrowseUpCallback(options.token) },
-      { text: copy.backToRoot, callback_data: encodeBrowseRootCallback(options.token) }
+      { text: LL.browser.up(), callback_data: encodeBrowseUpCallback(options.token) },
+      { text: LL.browser.backToRoot(), callback_data: encodeBrowseRootCallback(options.token) }
     ]);
   } else {
-    rows.push([{ text: copy.backToRoot, callback_data: encodeBrowseRootCallback(options.token) }]);
+    rows.push([{ text: LL.browser.backToRoot(), callback_data: encodeBrowseRootCallback(options.token) }]);
   }
 
   if (options.allowUseCurrentDirectory) {
-    rows.push([{ text: copy.useCurrentDirectory, callback_data: encodeBrowseUseCurrentDirCallback(options.token) }]);
+    rows.push([{ text: LL.browser.useCurrentDirectory(), callback_data: encodeBrowseUseCurrentDirCallback(options.token) }]);
   }
 
   rows.push([
-    { text: copy.refresh, callback_data: encodeBrowseRefreshCallback(options.token) },
-    { text: copy.close, callback_data: encodeBrowseCloseCallback(options.token) }
+    { text: LL.browser.refresh(), callback_data: encodeBrowseRefreshCallback(options.token) },
+    { text: LL.common.close(), callback_data: encodeBrowseCloseCallback(options.token) }
   ]);
 
   const lines = [
-    formatHtmlHeading(copy.title),
-    formatHtmlField(copy.project, options.projectName),
-    formatHtmlField(copy.location, options.relativePathLabel),
-    formatHtmlField(copy.page, `${options.page + 1}/${options.totalPages}`),
-    formatHtmlField(copy.mode, copy.readonly)
+    formatHtmlHeading(LL.browser.title()),
+    formatHtmlField(LL.browser.project(), options.projectName),
+    formatHtmlField(LL.browser.location(), options.relativePathLabel),
+    formatHtmlField(LL.browser.page(), `${options.page + 1}/${options.totalPages}`),
+    formatHtmlField(LL.browser.mode(), LL.browser.readonly())
   ];
 
   if (options.entries.length === 0) {
-    lines.push("", copy.empty);
+    lines.push("", LL.browser.empty());
   } else {
     for (const [index, entry] of options.entries.entries()) {
       const details = entry.sizeLabel && entry.kind === "file" ? ` · ${entry.sizeLabel}` : "";
@@ -181,21 +120,24 @@ export function buildProjectBrowserUseCurrentDirectoryConfirmMessage(options: {
   token: string;
   projectName: string;
   directoryPath: string;
+  language?: UiLanguage;
 }): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   return {
     text: [
-      formatHtmlHeading("确认新建会话"),
-      formatHtmlField("目录：", options.directoryPath),
-      formatHtmlField("显示名：", options.projectName),
-      "要在这个目录新建会话吗？"
+      formatHtmlHeading(LL.browser.confirmNewSession()),
+      formatHtmlField(LL.browser.directory(), options.directoryPath),
+      formatHtmlField(LL.browser.displayName(), options.projectName),
+      LL.browser.confirmNewInDirectory()
     ].join("\n"),
     replyMarkup: {
       inline_keyboard: [
-        [{ text: "确认新建会话", callback_data: encodeBrowseUseCurrentDirConfirmCallback(options.token) }],
-        [{ text: "返回目录", callback_data: encodeBrowseUseCurrentDirCancelCallback(options.token) }]
+        [{ text: LL.projects.confirmNewSessionButton(), callback_data: encodeBrowseUseCurrentDirConfirmCallback(options.token) }],
+        [{ text: LL.browser.backToDirectory(), callback_data: encodeBrowseUseCurrentDirCancelCallback(options.token) }]
       ]
     }
   };
@@ -218,19 +160,19 @@ export function buildProjectBrowserTextPreviewMessage(options: {
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
   const language = options.language ?? "zh";
-  const copy = browserCopy(language);
+  const LL = getTranslator(language);
   const rows: TelegramInlineKeyboardMarkup["inline_keyboard"] = [];
   const pagerRow: Array<{ text: string; callback_data: string }> = [];
 
   if (options.page > 0) {
     pagerRow.push({
-      text: copy.previous,
+      text: LL.common.previousPage(),
       callback_data: encodeBrowsePageCallback(options.token, options.page - 1)
     });
   }
   if (options.page + 1 < options.totalPages) {
     pagerRow.push({
-      text: copy.next,
+      text: LL.common.nextPage(),
       callback_data: encodeBrowsePageCallback(options.token, options.page + 1)
     });
   }
@@ -238,20 +180,20 @@ export function buildProjectBrowserTextPreviewMessage(options: {
     rows.push(pagerRow);
   }
 
-  rows.push([{ text: copy.returnToDirectory, callback_data: encodeBrowseBackCallback(options.token) }]);
+  rows.push([{ text: LL.browser.returnToDirectory(), callback_data: encodeBrowseBackCallback(options.token) }]);
 
   const lines = [
-    formatHtmlHeading(copy.previewTitle),
-    formatHtmlField(copy.project, options.projectName),
-    formatHtmlField(copy.file, options.fileName),
-    formatHtmlField(copy.path, options.relativeFilePath),
-    formatHtmlField(copy.size, options.sizeLabel),
-    formatHtmlField(copy.modified, options.modifiedAtLabel),
-    formatHtmlField(copy.previewPage, `${options.page + 1}/${options.totalPages}`)
+    formatHtmlHeading(LL.browser.previewTitle()),
+    formatHtmlField(LL.browser.project(), options.projectName),
+    formatHtmlField(LL.browser.file(), options.fileName),
+    formatHtmlField(LL.browser.path(), options.relativeFilePath),
+    formatHtmlField(LL.browser.size(), options.sizeLabel),
+    formatHtmlField(LL.browser.modified(), options.modifiedAtLabel),
+    formatHtmlField(LL.browser.previewPage(), `${options.page + 1}/${options.totalPages}`)
   ];
 
   if (options.truncated) {
-    lines.push(copy.previewTruncated);
+    lines.push(LL.browser.previewTruncated());
   }
 
   lines.push("", `<pre>${escapeHtml(options.pageText)}</pre>`);
@@ -271,16 +213,16 @@ export function buildProjectBrowserFileInfoMessage(options: {
   modifiedAtLabel: string;
 }): string {
   const language = options.language ?? "zh";
-  const copy = browserCopy(language);
+  const LL = getTranslator(language);
 
   return [
-    formatHtmlHeading(copy.infoTitle),
-    formatHtmlField(copy.project, options.projectName),
-    formatHtmlField(copy.file, options.fileName),
-    formatHtmlField(copy.path, options.relativeFilePath),
-    formatHtmlField(copy.size, options.sizeLabel),
-    formatHtmlField(copy.modified, options.modifiedAtLabel),
-    formatHtmlField(copy.type, copy.binary)
+    formatHtmlHeading(LL.browser.infoTitle()),
+    formatHtmlField(LL.browser.project(), options.projectName),
+    formatHtmlField(LL.browser.file(), options.fileName),
+    formatHtmlField(LL.browser.path(), options.relativeFilePath),
+    formatHtmlField(LL.browser.size(), options.sizeLabel),
+    formatHtmlField(LL.browser.modified(), options.modifiedAtLabel),
+    formatHtmlField(LL.browser.type(), LL.browser.binary())
   ].join("\n");
 }
 
@@ -292,17 +234,17 @@ export function buildProjectBrowserImageCaption(options: {
   sizeLabel: string;
 }): string {
   const language = options.language ?? "zh";
-  const copy = browserCopy(language);
+  const LL = getTranslator(language);
 
   return [
-    formatHtmlHeading(copy.imagePreview),
-    formatHtmlField(copy.project, options.projectName),
-    formatHtmlField(copy.file, options.fileName),
-    formatHtmlField(copy.path, options.relativeFilePath),
-    formatHtmlField(copy.size, options.sizeLabel)
+    formatHtmlHeading(LL.browser.imagePreview()),
+    formatHtmlField(LL.browser.project(), options.projectName),
+    formatHtmlField(LL.browser.file(), options.fileName),
+    formatHtmlField(LL.browser.path(), options.relativeFilePath),
+    formatHtmlField(LL.browser.size(), options.sizeLabel)
   ].join("\n");
 }
 
 export function formatProjectBrowserRootLabel(language: UiLanguage = "zh"): string {
-  return browserCopy(language).root;
+  return getTranslator(language).browser.root();
 }

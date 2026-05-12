@@ -63,6 +63,30 @@ type RootTranslation = {
 		 * 生​效
 		 */
 		effective: string
+		/**
+		 * ；
+		 */
+		separator: string
+		/**
+		 * 其​他
+		 */
+		other: string
+		/**
+		 * 上​一​页
+		 */
+		previousPage: string
+		/**
+		 * 下​一​页
+		 */
+		nextPage: string
+		/**
+		 * 上​一​页
+		 */
+		previous: string
+		/**
+		 * 下​一​页
+		 */
+		next: string
 	}
 	status: {
 		/**
@@ -162,9 +186,25 @@ type RootTranslation = {
 		 */
 		archivedTitle: string
 		/**
+		 * 已​批​量​归​档​会​话
+		 */
+		batchArchivedTitle: string
+		/**
 		 * 暂​无​会​话​。
 		 */
 		empty: string
+		/**
+		 * [​当​前​]​ 
+		 */
+		currentMarker: string
+		/**
+		 * 暂​无​会​话​。
+		 */
+		resumeEmpty: string
+		/**
+		 * 可​恢​复​的​ ​C​o​d​e​x​ ​会​话
+		 */
+		resumeTitle: string
 	}
 	sessionState: {
 		/**
@@ -183,6 +223,14 @@ type RootTranslation = {
 		 * 空​闲
 		 */
 		idle: string
+		/**
+		 * 准​备​中
+		 */
+		starting: string
+		/**
+		 * 等​待​中
+		 */
+		blocked: string
 		/**
 		 * 上​次​已​完​成
 		 */
@@ -211,6 +259,195 @@ type RootTranslation = {
 		 * 未​知​原​因
 		 */
 		failureUnknown: string
+		/**
+		 * 未​知
+		 */
+		unknown: string
+	}
+	projects: {
+		/**
+		 * 选​择​要​新​建​会​话​的​项​目
+		 */
+		pickerTitle: string
+		/**
+		 * 还​没​有​最​近​项​目​，​请​浏​览​目​录​或​手​动​输​入​路​径​。
+		 */
+		empty: string
+		/**
+		 * 浏​览​目​录
+		 */
+		browseDirectory: string
+		/**
+		 * 手​动​输​入​路​径
+		 */
+		enterPath: string
+		/**
+		 * 返​回​项​目​列​表
+		 */
+		backToProjects: string
+		/**
+		 * 选​择​要​浏​览​的​根​目​录
+		 */
+		selectRoot: string
+		/**
+		 * 请​发​送​要​开​始​会​话​的​目​录​路​径​，​例​如​：​/​h​o​m​e​/​u​b​u​n​t​u​/​R​e​p​o​/​o​p​e​n​c​l​a​w​
+	​发​送​ ​/​c​a​n​c​e​l​ ​返​回​项​目​列​表​。
+		 */
+		manualPathPrompt: string
+		/**
+		 * 要​在​这​个​目​录​中​新​建​会​话​吗​？
+		 */
+		confirmNewSession: string
+		/**
+		 * 确​认​新​建​会​话
+		 */
+		confirmNewSessionButton: string
+		/**
+		 * 这​个​入​口​已​下​线​。​请​使​用​浏​览​目​录​或​手​动​输​入​路​径​。
+		 */
+		offlineEntry: string
+		/**
+		 * 已​新​建​会​话
+		 */
+		newSessionCreated: string
+		/**
+		 * 已​切​换​会​话
+		 */
+		sessionSwitched: string
+		/**
+		 * 已​恢​复​ ​C​o​d​e​x​ ​会​话
+		 */
+		codexSessionResumed: string
+		/**
+		 * 当​前​项​目​：
+		 */
+		currentProject: string
+		/**
+		 * 已​归​档​会​话
+		 */
+		archivedSession: string
+		/**
+		 * 已​归​档​：
+		 */
+		batchArchived: string
+		/**
+		 * 已​跳​过​运​行​中​：
+		 */
+		batchSkippedRunning: string
+		/**
+		 * 失​败​：
+		 */
+		batchFailed: string
+		/**
+		 * 已​恢​复​会​话
+		 */
+		sessionRestored: string
+		/**
+		 * 当​前​会​话​已​重​命​名​为​：
+		 */
+		sessionRenamed: string
+		/**
+		 * 当​前​项​目​别​名​已​更​新​为​：
+		 */
+		projectAliasRenamed: string
+		/**
+		 * 已​清​除​项​目​别​名​：
+		 */
+		projectAliasCleared: string
+		/**
+		 * 已​收​藏​项​目​：
+		 */
+		projectFavorited: string
+		/**
+		 * 当​前​没​有​活​动​会​话​，​请​发​送​ ​/​n​e​w​ ​选​择​项​目​。
+		 */
+		noActiveSession: string
+		/**
+		 * 重​命​名​会​话
+		 */
+		renameSession: string
+		/**
+		 * 设​置​项​目​别​名
+		 */
+		setProjectAlias: string
+		/**
+		 * 清​除​项​目​别​名
+		 */
+		clearProjectAlias: string
+		groups: {
+			/**
+			 * 已​收​藏
+			 */
+			pinned: string
+			/**
+			 * 最​近​使​用
+			 */
+			recent: string
+		}
+		badges: {
+			/**
+			 * 最​近
+			 */
+			recent: string
+			/**
+			 * 本​地​发​现
+			 */
+			locallyDiscovered: string
+			/**
+			 * 有​历​史​会​话
+			 */
+			hasHistory: string
+		}
+	}
+	model: {
+		/**
+		 * 选​择​模​型
+		 */
+		selectModel: string
+		/**
+		 * 选​择​思​考​强​度
+		 */
+		selectEffort: string
+		/**
+		 * 先​选​模​型​，​再​按​该​模​型​支​持​情​况​选​择​思​考​强​度​。
+		 */
+		modelTip: string
+		/**
+		 * 仅​展​示​这​个​模​型​实​际​支​持​的​档​位​。
+		 */
+		effortTip: string
+		/**
+		 * 已​关​闭​模​型​选​择
+		 */
+		modelPickerClosed: string
+		/**
+		 * 要​修​改​哪​个​名​称​？
+		 */
+		editWhichName: string
+		/**
+		 * 已​配​置
+		 */
+		configuredMarker: string
+		/**
+		 * 生​效
+		 */
+		effectiveMarker: string
+		/**
+		 * 清​除​模​型​/​强​度​覆​盖
+		 */
+		clearOverride: string
+		/**
+		 * 页
+		 */
+		pageLabel: string
+		/**
+		 * 个
+		 */
+		countUnit: string
+		/**
+		 * 当​前
+		 */
+		current: string
 	}
 	commands: {
 		/**
@@ -234,6 +471,1190 @@ type RootTranslation = {
 			 * 控​制
 			 */
 			control: string
+		}
+	}
+	commandPanel: {
+		/**
+		 * 打​开​命​令​面​板
+		 */
+		openPanel: string
+		/**
+		 * 快​捷​指​令
+		 */
+		title: string
+		/**
+		 * 点​击​按​钮​即​可​执​行​桥​接​指​令​。
+		 */
+		tapToRun: string
+		/**
+		 * 当​前​快​捷​指​令​：
+		 */
+		selectedLabel: string
+		/**
+		 * 当​前​还​没​有​已​配​置​的​快​捷​指​令​。
+		 */
+		noCommands: string
+		/**
+		 * 完​整​帮​助
+		 */
+		fullHelp: string
+		/**
+		 * 编​辑​快​捷​指​令
+		 */
+		editCommands: string
+		/**
+		 * 编​辑​快​捷​指​令
+		 */
+		editTitle: string
+		/**
+		 * 点​击​按​钮​进​行​选​择​或​移​除​。​选​择​顺​序​就​是​显​示​顺​序​。
+		 */
+		editHint: string
+		/**
+		 * 新​选​中​的​指​令​会​追​加​到​末​尾​。
+		 */
+		editAppendHint: string
+		/**
+		 * 当​前​分​组​：
+		 */
+		currentGroup: string
+		/**
+		 * 已​选​指​令​：
+		 */
+		selectedCommands: string
+		/**
+		 * 当​前​还​没​有​选​中​的​快​捷​指​令​。
+		 */
+		noSelected: string
+		/**
+		 * 分​组​页​码​：
+		 */
+		groupPage: string
+		/**
+		 * 总​页​码​：
+		 */
+		totalPage: string
+		/**
+		 * 保​存
+		 */
+		save: string
+		/**
+		 * 恢​复​默​认
+		 */
+		restoreDefault: string
+	}
+	browser: {
+		/**
+		 * 文​件​浏​览
+		 */
+		title: string
+		/**
+		 * 当​前​项​目​：
+		 */
+		project: string
+		/**
+		 * 当​前​位​置​：
+		 */
+		location: string
+		/**
+		 * 页​码​：
+		 */
+		page: string
+		/**
+		 * 模​式​：
+		 */
+		mode: string
+		/**
+		 * 只​读​浏​览
+		 */
+		readonly: string
+		/**
+		 * 项​目​根
+		 */
+		root: string
+		/**
+		 * 当​前​目​录​为​空​。
+		 */
+		empty: string
+		/**
+		 * 上​一​级
+		 */
+		up: string
+		/**
+		 * 回​到​项​目​根
+		 */
+		backToRoot: string
+		/**
+		 * 刷​新
+		 */
+		refresh: string
+		/**
+		 * 在​当​前​目​录​新​建​会​话
+		 */
+		useCurrentDirectory: string
+		/**
+		 * 文​件​预​览
+		 */
+		previewTitle: string
+		/**
+		 * 文​件​：
+		 */
+		file: string
+		/**
+		 * 路​径​：
+		 */
+		path: string
+		/**
+		 * 大​小​：
+		 */
+		size: string
+		/**
+		 * 修​改​时​间​：
+		 */
+		modified: string
+		/**
+		 * 预​览​页​：
+		 */
+		previewPage: string
+		/**
+		 * 仅​预​览​前​ ​4​8​ ​K​B​。
+		 */
+		previewTruncated: string
+		/**
+		 * 返​回​目​录
+		 */
+		returnToDirectory: string
+		/**
+		 * 文​件​信​息
+		 */
+		infoTitle: string
+		/**
+		 * 类​型​：
+		 */
+		type: string
+		/**
+		 * 二​进​制​或​暂​不​支​持​预​览
+		 */
+		binary: string
+		/**
+		 * 图​片​预​览
+		 */
+		imagePreview: string
+		/**
+		 * 确​认​新​建​会​话
+		 */
+		confirmNewSession: string
+		/**
+		 * 目​录​：
+		 */
+		directory: string
+		/**
+		 * 显​示​名​：
+		 */
+		displayName: string
+		/**
+		 * 要​在​这​个​目​录​新​建​会​话​吗​？
+		 */
+		confirmNewInDirectory: string
+		/**
+		 * 返​回​目​录
+		 */
+		backToDirectory: string
+	}
+	finalAnswer: {
+		/**
+		 * 展​开​全​文
+		 */
+		expandFull: string
+		/**
+		 * 收​起
+		 */
+		collapse: string
+		/**
+		 * 实​施​这​个​计​划
+		 */
+		implementPlan: string
+		/**
+		 * 最​近​输​出
+		 */
+		recentOutput: string
+		/**
+		 * 点​击​「​展​开​最​近​输​出​」​查​看​该​会​话​最​近​一​次​输​出​。
+		 */
+		expandRecentOutputHint: string
+		/**
+		 * 该​会​话​还​没​有​最​近​输​出​。
+		 */
+		noRecentOutput: string
+		/**
+		 * 展​开​最​近​输​出
+		 */
+		expandRecentOutput: string
+		/**
+		 * 收​起​最​近​输​出
+		 */
+		collapseRecentOutput: string
+		/**
+		 * 展​开​方​案
+		 */
+		expandPlan: string
+		/**
+		 * 收​起​方​案
+		 */
+		collapsePlan: string
+		/**
+		 * 已​开​始​实​施​。
+		 */
+		planConsumed: string
+		/**
+		 * 已​折​叠​，​共​ 
+		 */
+		collapsedMultiPagePrefix: string
+		/**
+		 *  ​页​，​点​击
+		 */
+		collapsedMultiPageMiddle: string
+		/**
+		 * 查​看​。
+		 */
+		collapsedMultiPageSuffix: string
+		/**
+		 * 已​折​叠​，​点​击
+		 */
+		collapsedSinglePrefix: string
+		/**
+		 * 查​看​剩​余​内​容​。
+		 */
+		collapsedSingleSuffix: string
+		/**
+		 * 第​ 
+		 */
+		pagePrefix: string
+		/**
+		 *  ​页
+		 */
+		pageSuffix: string
+	}
+	shared: {
+		/**
+		 * 刚​刚
+		 */
+		justNow: string
+		/**
+		 * 分​钟​前
+		 */
+		minutesAgo: string
+		/**
+		 * 小​时​前
+		 */
+		hoursAgo: string
+		/**
+		 * 天​前
+		 */
+		daysAgo: string
+		/**
+		 * 关​闭
+		 */
+		effortNone: string
+		/**
+		 * 极​省
+		 */
+		effortMinimal: string
+		/**
+		 * 低
+		 */
+		effortLow: string
+		/**
+		 * 中
+		 */
+		effortMedium: string
+		/**
+		 * 高
+		 */
+		effortHigh: string
+		/**
+		 * 极​高
+		 */
+		effortXhigh: string
+	}
+	runtime: {
+		/**
+		 * 运​行​状​态
+		 */
+		statusTitle: string
+		/**
+		 * 状​态
+		 */
+		state: string
+		/**
+		 * 进​度
+		 */
+		progress: string
+		/**
+		 * 会​话
+		 */
+		session: string
+		/**
+		 * 收​起​计​划​清​单
+		 */
+		hidePlan: string
+		/**
+		 * 收​起​ ​A​g​e​n​t
+		 */
+		hideAgents: string
+		/**
+		 * 计​划​清​单​:
+		 */
+		planLabel: string
+		/**
+		 * A​g​e​n​t​:
+		 */
+		agentsLabel: string
+		/**
+		 * 计​划​详​情
+		 */
+		planDetails: string
+		/**
+		 * 协​作​ ​A​g​e​n​t
+		 */
+		collabAgents: string
+		/**
+		 * 查​看​中
+		 */
+		viewing: string
+		/**
+		 * 当​前​输​入
+		 */
+		currentInput: string
+		/**
+		 * 当​前
+		 */
+		current: string
+		/**
+		 * 查​看​详​情
+		 */
+		inspect: string
+		/**
+		 * 命​令
+		 */
+		commands: string
+		/**
+		 * 中​断​操​作
+		 */
+		interrupt: string
+		/**
+		 * 当​前​查​看​中​的​会​话
+		 */
+		currentViewedSession: string
+		/**
+		 * 其​他​运​行​中​的​会​话
+		 */
+		otherRunningSessions: string
+		/**
+		 * 最​近​结​束​的​会​话
+		 */
+		recentEndedSessions: string
+		/**
+		 * 当​前​输​入​会​话
+		 */
+		currentInputSession: string
+		/**
+		 * 当​前​查​看​中​的​运​行​会​话
+		 */
+		focusedRunningSession: string
+		/**
+		 * 当​前​查​看​中​的​会​话
+		 */
+		focusedSession: string
+		/**
+		 * 其​他​会​话
+		 */
+		otherSessions: string
+		/**
+		 * 最​近​结​束​的​会​话
+		 */
+		recentTerminalSessions: string
+		/**
+		 * �​�​ ​提​示​：​需​要​查​看​运​行​卡​片​时​，​可​发​送​ ​/​h​u​b​。
+		 */
+		hubTip: string
+		/**
+		 * �​�​ ​提​示​：​使​用​ ​/​i​n​s​p​e​c​t​ ​查​看​详​情​，​使​用​ ​/​i​n​t​e​r​r​u​p​t​ ​打​断​，​使​用​ ​/​s​t​a​t​u​s​ ​查​看​状​态​。
+		 */
+		surfaceFooter: string
+		/**
+		 * �​�​ ​/​s​t​a​t​u​s​ ​|​ ​/​i​n​s​p​e​c​t​ ​|​ ​/​i​n​t​e​r​r​u​p​t
+		 */
+		hubFooter: string
+		/**
+		 * 计​划​清​单
+		 */
+		planEntry: string
+		fields: {
+			/**
+			 * 模​型​名
+			 */
+			modelName: string
+			/**
+			 * 模​型​ ​+​ ​推​理​强​度
+			 */
+			modelWithReasoning: string
+			/**
+			 * 当​前​目​录
+			 */
+			currentDir: string
+			/**
+			 * 项​目​根​目​录
+			 */
+			projectRoot: string
+			/**
+			 * G​i​t​ ​分​支
+			 */
+			gitBranch: string
+			/**
+			 * 剩​余​上​下​文
+			 */
+			contextRemaining: string
+			/**
+			 * 已​用​上​下​文
+			 */
+			contextUsed: string
+			/**
+			 * 5​ ​小​时​额​度
+			 */
+			fiveHourLimit: string
+			/**
+			 * 周​额​度
+			 */
+			weeklyLimit: string
+			/**
+			 * C​o​d​e​x​ ​版​本
+			 */
+			codexVersion: string
+			/**
+			 * 上​下​文​窗​口​大​小
+			 */
+			contextWindowSize: string
+			/**
+			 * 已​用​ ​T​o​k​e​n
+			 */
+			usedTokens: string
+			/**
+			 * 累​计​输​入​ ​T​o​k​e​n
+			 */
+			totalInputTokens: string
+			/**
+			 * 累​计​输​出​ ​T​o​k​e​n
+			 */
+			totalOutputTokens: string
+			/**
+			 * 会​话​ ​I​D
+			 */
+			sessionId: string
+			/**
+			 * 会​话​名
+			 */
+			sessionName: string
+			/**
+			 * 项​目​名
+			 */
+			projectName: string
+			/**
+			 * 项​目​路​径​（​旧​）
+			 */
+			projectPath: string
+			/**
+			 * P​l​a​n​ ​m​o​d​e
+			 */
+			planMode: string
+			/**
+			 * 模​型​ ​+​ ​强​度​（​旧​）
+			 */
+			modelReasoning: string
+			/**
+			 * 线​程​ ​I​D​（​旧​）
+			 */
+			threadId: string
+			/**
+			 * T​u​r​n​ ​I​D
+			 */
+			turnId: string
+			/**
+			 * 阻​塞​原​因
+			 */
+			blockedReason: string
+			/**
+			 * 当​前​步​骤
+			 */
+			currentStep: string
+			/**
+			 * 本​次​ ​T​o​k​e​n
+			 */
+			lastTokenUsage: string
+			/**
+			 * 累​计​ ​T​o​k​e​n
+			 */
+			totalTokenUsage: string
+			/**
+			 * 上​下​文​窗​口
+			 */
+			contextWindow: string
+			/**
+			 * 最​终​答​复​已​就​绪
+			 */
+			finalAnswerReady: string
+		}
+		preferences: {
+			/**
+			 * 已​应​用​ ​R​u​n​t​i​m​e​ ​卡​片​字​段
+			 */
+			appliedTitle: string
+			/**
+			 * 当​前​字​段​：
+			 */
+			currentFields: string
+			/**
+			 * 已​关​闭​ ​R​u​n​t​i​m​e​ ​卡​片​字​段​选​择
+			 */
+			closedTitle: string
+			/**
+			 * R​u​n​t​i​m​e​ ​卡​片​字​段
+			 */
+			title: string
+			/**
+			 * 按​按​钮​选​择​要​显​示​的​字​段​。
+			 */
+			hint: string
+			/**
+			 * 选​择​顺​序​就​是​显​示​顺​序​；​新​选​中​的​字​段​会​追​加​到​末​尾​。
+			 */
+			orderHint: string
+			/**
+			 * 当​前​分​组​：
+			 */
+			currentGroup: string
+			/**
+			 * 已​选​字​段​：
+			 */
+			selectedFields: string
+			/**
+			 * 当​前​没​有​已​选​字​段​。
+			 */
+			noSelectedFields: string
+			/**
+			 * 分​组​页​码​：
+			 */
+			groupPage: string
+			/**
+			 * 总​页​码​：
+			 */
+			totalPage: string
+			/**
+			 * 保​存​并​应​用
+			 */
+			save: string
+			/**
+			 * 恢​复​默​认
+			 */
+			reset: string
+		}
+		planStatus: {
+			/**
+			 * 进​行​中
+			 */
+			inProgress: string
+			/**
+			 * 已​完​成
+			 */
+			completed: string
+			/**
+			 * 待​处​理
+			 */
+			pending: string
+			/**
+			 * 失​败
+			 */
+			failed: string
+			/**
+			 * 阻​塞​中
+			 */
+			blocked: string
+		}
+		agentStatus: {
+			/**
+			 * 等​待​初​始​化
+			 */
+			pendingInit: string
+			/**
+			 * 运​行​中
+			 */
+			running: string
+			/**
+			 * 已​完​成
+			 */
+			completed: string
+			/**
+			 * 异​常
+			 */
+			errored: string
+			/**
+			 * 已​停​止
+			 */
+			stopped: string
+			/**
+			 * 未​找​到
+			 */
+			notFound: string
+			/**
+			 * 等​待​状​态​更​新
+			 */
+			waitingForUpdate: string
+		}
+		interactionState: {
+			/**
+			 * 待​处​理
+			 */
+			pending: string
+			/**
+			 * 等​待​文​字​回​答
+			 */
+			awaitingText: string
+			/**
+			 * 已​处​理
+			 */
+			answered: string
+			/**
+			 * 已​取​消
+			 */
+			canceled: string
+			/**
+			 * 已​过​期
+			 */
+			expired: string
+			/**
+			 * 处​理​失​败
+			 */
+			failed: string
+		}
+		interaction: {
+			/**
+			 * 类​型​：
+			 */
+			type: string
+			/**
+			 * 内​容​：
+			 */
+			body: string
+			/**
+			 * 说​明​：
+			 */
+			detail: string
+			/**
+			 * 取​消​本​次​交​互
+			 */
+			cancelInteraction: string
+			/**
+			 * 问​题​：
+			 */
+			questionLabel: string
+			/**
+			 * 标​题​：
+			 */
+			headerLabel: string
+			/**
+			 * 这​条​回​答​会​按​敏​感​输​入​处​理​，​不​会​进​入​可​见​摘​要​。
+			 */
+			secretNotice: string
+			/**
+			 * 当​前​正​在​等​待​你​直​接​发​送​这​条​问​题​的​文​字​回​答​。
+			 */
+			awaitingTextNotice: string
+			/**
+			 * 点​击​下​方​按​钮​后​，​直​接​在​聊​天​里​发​送​你​的​回​答​。
+			 */
+			sendTextPrompt: string
+			/**
+			 * 发​送​文​字​回​答
+			 */
+			sendTextAnswer: string
+			/**
+			 * 状​态​：
+			 */
+			stateLabel: string
+			/**
+			 * 结​果​：
+			 */
+			resultLabel: string
+			/**
+			 * 已​提​交​回​答
+			 */
+			submittedAnswers: string
+			/**
+			 * 收​起​已​提​交​回​答
+			 */
+			collapseAnswers: string
+			/**
+			 * 查​看​已​提​交​回​答
+			 */
+			expandAnswers: string
+			/**
+			 * 已​过​期
+			 */
+			expiredLabel: string
+		}
+		inspectSection: {
+			/**
+			 * 详​情​已​折​叠​，​点​击​按​钮​展​开​。
+			 */
+			collapseHint: string
+			/**
+			 * 展​开​详​情
+			 */
+			expandDetails: string
+			/**
+			 * 收​起​详​情
+			 */
+			collapseDetails: string
+			/**
+			 * 详​情​页​：
+			 */
+			detailPage: string
+			/**
+			 * 当​前​任​务​详​情
+			 */
+			currentTaskDetails: string
+			/**
+			 * 会​话​：
+			 */
+			session: string
+			/**
+			 * 项​目​：
+			 */
+			project: string
+			/**
+			 * 状​态​：
+			 */
+			state: string
+			/**
+			 * 阻​塞​原​因​：
+			 */
+			blockedReason: string
+			/**
+			 * 当​前​动​作​：
+			 */
+			currentAction: string
+			/**
+			 * 已​耗​时​：
+			 */
+			elapsedTime: string
+			/**
+			 * 最​近​结​论​：
+			 */
+			recentConclusion: string
+			/**
+			 * 最​终​答​复​：
+			 */
+			finalAnswerReady: string
+			/**
+			 * 已​就​绪
+			 */
+			ready: string
+			/**
+			 * 说​明​：
+			 */
+			note: string
+			/**
+			 * 最​近​动​作
+			 */
+			recentActions: string
+			/**
+			 * 最​近​命​令
+			 */
+			recentCommands: string
+			/**
+			 * 最​近​文​件​变​更
+			 */
+			recentFileChanges: string
+			/**
+			 * 最​近​工​具​与​搜​索
+			 */
+			recentToolsAndSearch: string
+			/**
+			 * 最​近​ ​H​o​o​k
+			 */
+			recentHooks: string
+			/**
+			 * 提​示​与​告​警
+			 */
+			noticesAndWarnings: string
+			/**
+			 * T​o​k​e​n​ ​用​量
+			 */
+			tokenUsage: string
+			/**
+			 * 最​近​差​异
+			 */
+			recentDiff: string
+			/**
+			 * 计​划​清​单
+			 */
+			planList: string
+			/**
+			 * 方​案​草​稿
+			 */
+			planDraft: string
+			/**
+			 * 补​充​说​明
+			 */
+			supplementaryNotes: string
+			/**
+			 * 待​处​理​交​互
+			 */
+			pendingInteractions: string
+			/**
+			 * 最​近​已​答​交​互
+			 */
+			recentAnsweredInteractions: string
+			/**
+			 * 命​令​：
+			 */
+			commandLabel: string
+			/**
+			 * 状​态​：
+			 */
+			commandState: string
+			/**
+			 * 结​果​：
+			 */
+			commandResult: string
+			/**
+			 * 目​录​：
+			 */
+			commandDirectory: string
+			/**
+			 * 退​出​码​：
+			 */
+			commandExitCode: string
+			/**
+			 * 耗​时​：
+			 */
+			commandDuration: string
+			/**
+			 * ，​等​待​文​字​回​答
+			 */
+			awaitingTextSuffix: string
+			/**
+			 * 开​始​执​行
+			 */
+			turnStarted: string
+			/**
+			 * 执​行​结​束​（
+			 */
+			turnCompleted: string
+			/**
+			 * 线​程​阻​塞​（
+			 */
+			threadBlocked: string
+			/**
+			 * 线​程​状​态​：
+			 */
+			threadStatus: string
+			/**
+			 * 开​始​：
+			 */
+			itemStarted: string
+			/**
+			 * 完​成​：
+			 */
+			itemCompleted: string
+		}
+		rollback: {
+			/**
+			 * 选​择​回​滚​目​标
+			 */
+			selectTarget: string
+			/**
+			 * 只​展​示​用​户​输​入​，​不​展​示​ ​a​g​e​n​t​ ​输​出​。
+			 */
+			onlyUserInput: string
+			/**
+			 * 页​码​：
+			 */
+			pageLabel: string
+			/**
+			 * 确​认​回​滚
+			 */
+			confirmRollback: string
+			/**
+			 * 目​标​：
+			 */
+			targetLabel: string
+			/**
+			 * 将​删​除​的​ ​t​u​r​n​ ​数​：
+			 */
+			turnCountToDelete: string
+			/**
+			 * 本​地​文​件​改​动​不​会​自​动​撤​销​。
+			 */
+			localChangesWarning: string
+			/**
+			 * 确​认​回​滚
+			 */
+			confirmButton: string
+			/**
+			 * 返​回​列​表
+			 */
+			backToList: string
+			/**
+			 * 已​关​闭​回​滚​目​标​选​择
+			 */
+			closedTitle: string
+			/**
+			 * 未​执​行​回​滚​。
+			 */
+			notRolledBack: string
+			/**
+			 * 已​关​闭​活​动​详​情
+			 */
+			closedInspectTitle: string
+			/**
+			 * 重​新​发​送​ ​/​i​n​s​p​e​c​t​ ​可​再​次​打​开​。
+			 */
+			reopenHint: string
+		}
+		currentStep: {
+			/**
+			 * 等​待​批​准
+			 */
+			waitingForApproval: string
+			/**
+			 * 等​待​输​入
+			 */
+			waitingForInput: string
+			/**
+			 * 正​在​更​新​计​划
+			 */
+			updatingPlan: string
+			/**
+			 * 正​在​运​行​命​令
+			 */
+			runningCommand: string
+			/**
+			 * 正​在​修​改​文​件
+			 */
+			editingFiles: string
+			/**
+			 * 正​在​调​用​ ​M​C​P​ ​工​具
+			 */
+			callingMcpTool: string
+			/**
+			 * 正​在​进​行​网​页​搜​索
+			 */
+			webSearch: string
+			/**
+			 * 正​在​整​理​回​复
+			 */
+			draftingResponse: string
+			/**
+			 * 正​在​思​考
+			 */
+			thinking: string
+			/**
+			 * 正​在​处​理​任​务
+			 */
+			processingTask: string
+			/**
+			 * 等​待​第​一​条​活​动
+			 */
+			waitingForFirstActivity: string
+			/**
+			 * 正​在​处​理​中
+			 */
+			processing: string
+			/**
+			 * 等​待​继​续
+			 */
+			waitingToContinue: string
+			/**
+			 * 当​前​没​有​进​行​中​的​步​骤
+			 */
+			noActiveStep: string
+			/**
+			 * 已​中​断​，​没​有​进​行​中​的​步​骤
+			 */
+			interruptedNoStep: string
+			/**
+			 * 执​行​失​败​，​没​有​进​行​中​的​步​骤
+			 */
+			failedNoStep: string
+			/**
+			 * 等​待​活​动
+			 */
+			waitingForActivity: string
+		}
+		milestone: {
+			/**
+			 * 最​终​答​复​已​生​成
+			 */
+			replyGenerated: string
+		}
+		threadStatus: {
+			/**
+			 * 未​加​载
+			 */
+			notLoaded: string
+			/**
+			 * 空​闲
+			 */
+			idle: string
+			/**
+			 * 活​跃
+			 */
+			active: string
+			/**
+			 * 系​统​错​误
+			 */
+			systemError: string
+		}
+		blockedToken: {
+			/**
+			 * 等​待​批​准
+			 */
+			waitingOnApproval: string
+			/**
+			 * 等​待​输​入
+			 */
+			waitingOnUserInput: string
+		}
+		commandState: {
+			/**
+			 * 进​行​中
+			 */
+			running: string
+			/**
+			 * 已​完​成
+			 */
+			completed: string
+			/**
+			 * 失​败
+			 */
+			failed: string
+			/**
+			 * 已​中​断
+			 */
+			interrupted: string
+		}
+		optionalLabel: {
+			/**
+			 * 模​型
+			 */
+			model: string
+			/**
+			 * 目​录
+			 */
+			currentDir: string
+		}
+		/**
+		 * .​.​.​ ​还​有​ 
+		 */
+		moreStepsPrefix: string
+		/**
+		 *  ​个​步​骤
+		 */
+		moreStepsSuffix: string
+		/**
+		 * .​.​.​ ​还​有​ 
+		 */
+		moreAgentsPrefix: string
+		/**
+		 *  ​个​ ​A​g​e​n​t
+		 */
+		moreAgentsSuffix: string
+		/**
+		 * .​.​.​ ​还​有​ 
+		 */
+		morePlanItemsPrefix: string
+		/**
+		 *  ​项​计​划
+		 */
+		morePlanItemsSuffix: string
+		/**
+		 * .​.​.​ ​还​有​ 
+		 */
+		moreSessionsPrefix: string
+		/**
+		 *  ​个​会​话​未​显​示
+		 */
+		moreSessionsSuffix: string
+		/**
+		 *  ​个​运​行​中
+		 */
+		agentsRunningSuffix: string
+		/**
+		 *  ​个
+		 */
+		selectedFieldCountSuffix: string
+		/**
+		 * 本​次​：
+		 */
+		tokenUsageThisPrefix: string
+		/**
+		 * 累​计​：
+		 */
+		tokenUsageTotalPrefix: string
+		/**
+		 * 输​入​ 
+		 */
+		tokenUsageInput: string
+		/**
+		 * ，​输​出​ 
+		 */
+		tokenUsageOutput: string
+		/**
+		 * ，​缓​存​ 
+		 */
+		tokenUsageCache: string
+		/**
+		 * ，​推​理​ 
+		 */
+		tokenUsageReasoning: string
+		/**
+		 * 上​下​文​窗​口​：
+		 */
+		tokenContextWindowPrefix: string
+		inspectTurnStatus: {
+			/**
+			 * 空​闲
+			 */
+			idle: string
+			/**
+			 * 准​备​中
+			 */
+			starting: string
+			/**
+			 * 执​行​中
+			 */
+			running: string
+			/**
+			 * 等​待​中
+			 */
+			blocked: string
+			/**
+			 * 已​中​断
+			 */
+			interrupted: string
+			/**
+			 * 已​完​成
+			 */
+			completed: string
+			/**
+			 * 失​败
+			 */
+			failed: string
+			/**
+			 * 未​知
+			 */
+			unknown: string
 		}
 	}
 }
@@ -288,6 +1709,30 @@ export type TranslationFunctions = {
 		 * 生效
 		 */
 		effective: () => LocalizedString
+		/**
+		 * ；
+		 */
+		separator: () => LocalizedString
+		/**
+		 * 其他
+		 */
+		other: () => LocalizedString
+		/**
+		 * 上一页
+		 */
+		previousPage: () => LocalizedString
+		/**
+		 * 下一页
+		 */
+		nextPage: () => LocalizedString
+		/**
+		 * 上一页
+		 */
+		previous: () => LocalizedString
+		/**
+		 * 下一页
+		 */
+		next: () => LocalizedString
 	}
 	status: {
 		/**
@@ -387,9 +1832,25 @@ export type TranslationFunctions = {
 		 */
 		archivedTitle: () => LocalizedString
 		/**
+		 * 已批量归档会话
+		 */
+		batchArchivedTitle: () => LocalizedString
+		/**
 		 * 暂无会话。
 		 */
 		empty: () => LocalizedString
+		/**
+		 * [当前] 
+		 */
+		currentMarker: () => LocalizedString
+		/**
+		 * 暂无会话。
+		 */
+		resumeEmpty: () => LocalizedString
+		/**
+		 * 可恢复的 Codex 会话
+		 */
+		resumeTitle: () => LocalizedString
 	}
 	sessionState: {
 		/**
@@ -408,6 +1869,14 @@ export type TranslationFunctions = {
 		 * 空闲
 		 */
 		idle: () => LocalizedString
+		/**
+		 * 准备中
+		 */
+		starting: () => LocalizedString
+		/**
+		 * 等待中
+		 */
+		blocked: () => LocalizedString
 		/**
 		 * 上次已完成
 		 */
@@ -436,6 +1905,195 @@ export type TranslationFunctions = {
 		 * 未知原因
 		 */
 		failureUnknown: () => LocalizedString
+		/**
+		 * 未知
+		 */
+		unknown: () => LocalizedString
+	}
+	projects: {
+		/**
+		 * 选择要新建会话的项目
+		 */
+		pickerTitle: () => LocalizedString
+		/**
+		 * 还没有最近项目，请浏览目录或手动输入路径。
+		 */
+		empty: () => LocalizedString
+		/**
+		 * 浏览目录
+		 */
+		browseDirectory: () => LocalizedString
+		/**
+		 * 手动输入路径
+		 */
+		enterPath: () => LocalizedString
+		/**
+		 * 返回项目列表
+		 */
+		backToProjects: () => LocalizedString
+		/**
+		 * 选择要浏览的根目录
+		 */
+		selectRoot: () => LocalizedString
+		/**
+		 * 请发送要开始会话的目录路径，例如：/home/ubuntu/Repo/openclaw
+	发送 /cancel 返回项目列表。
+		 */
+		manualPathPrompt: () => LocalizedString
+		/**
+		 * 要在这个目录中新建会话吗？
+		 */
+		confirmNewSession: () => LocalizedString
+		/**
+		 * 确认新建会话
+		 */
+		confirmNewSessionButton: () => LocalizedString
+		/**
+		 * 这个入口已下线。请使用浏览目录或手动输入路径。
+		 */
+		offlineEntry: () => LocalizedString
+		/**
+		 * 已新建会话
+		 */
+		newSessionCreated: () => LocalizedString
+		/**
+		 * 已切换会话
+		 */
+		sessionSwitched: () => LocalizedString
+		/**
+		 * 已恢复 Codex 会话
+		 */
+		codexSessionResumed: () => LocalizedString
+		/**
+		 * 当前项目：
+		 */
+		currentProject: () => LocalizedString
+		/**
+		 * 已归档会话
+		 */
+		archivedSession: () => LocalizedString
+		/**
+		 * 已归档：
+		 */
+		batchArchived: () => LocalizedString
+		/**
+		 * 已跳过运行中：
+		 */
+		batchSkippedRunning: () => LocalizedString
+		/**
+		 * 失败：
+		 */
+		batchFailed: () => LocalizedString
+		/**
+		 * 已恢复会话
+		 */
+		sessionRestored: () => LocalizedString
+		/**
+		 * 当前会话已重命名为：
+		 */
+		sessionRenamed: () => LocalizedString
+		/**
+		 * 当前项目别名已更新为：
+		 */
+		projectAliasRenamed: () => LocalizedString
+		/**
+		 * 已清除项目别名：
+		 */
+		projectAliasCleared: () => LocalizedString
+		/**
+		 * 已收藏项目：
+		 */
+		projectFavorited: () => LocalizedString
+		/**
+		 * 当前没有活动会话，请发送 /new 选择项目。
+		 */
+		noActiveSession: () => LocalizedString
+		/**
+		 * 重命名会话
+		 */
+		renameSession: () => LocalizedString
+		/**
+		 * 设置项目别名
+		 */
+		setProjectAlias: () => LocalizedString
+		/**
+		 * 清除项目别名
+		 */
+		clearProjectAlias: () => LocalizedString
+		groups: {
+			/**
+			 * 已收藏
+			 */
+			pinned: () => LocalizedString
+			/**
+			 * 最近使用
+			 */
+			recent: () => LocalizedString
+		}
+		badges: {
+			/**
+			 * 最近
+			 */
+			recent: () => LocalizedString
+			/**
+			 * 本地发现
+			 */
+			locallyDiscovered: () => LocalizedString
+			/**
+			 * 有历史会话
+			 */
+			hasHistory: () => LocalizedString
+		}
+	}
+	model: {
+		/**
+		 * 选择模型
+		 */
+		selectModel: () => LocalizedString
+		/**
+		 * 选择思考强度
+		 */
+		selectEffort: () => LocalizedString
+		/**
+		 * 先选模型，再按该模型支持情况选择思考强度。
+		 */
+		modelTip: () => LocalizedString
+		/**
+		 * 仅展示这个模型实际支持的档位。
+		 */
+		effortTip: () => LocalizedString
+		/**
+		 * 已关闭模型选择
+		 */
+		modelPickerClosed: () => LocalizedString
+		/**
+		 * 要修改哪个名称？
+		 */
+		editWhichName: () => LocalizedString
+		/**
+		 * 已配置
+		 */
+		configuredMarker: () => LocalizedString
+		/**
+		 * 生效
+		 */
+		effectiveMarker: () => LocalizedString
+		/**
+		 * 清除模型/强度覆盖
+		 */
+		clearOverride: () => LocalizedString
+		/**
+		 * 页
+		 */
+		pageLabel: () => LocalizedString
+		/**
+		 * 个
+		 */
+		countUnit: () => LocalizedString
+		/**
+		 * 当前
+		 */
+		current: () => LocalizedString
 	}
 	commands: {
 		/**
@@ -459,6 +2117,1190 @@ export type TranslationFunctions = {
 			 * 控制
 			 */
 			control: () => LocalizedString
+		}
+	}
+	commandPanel: {
+		/**
+		 * 打开命令面板
+		 */
+		openPanel: () => LocalizedString
+		/**
+		 * 快捷指令
+		 */
+		title: () => LocalizedString
+		/**
+		 * 点击按钮即可执行桥接指令。
+		 */
+		tapToRun: () => LocalizedString
+		/**
+		 * 当前快捷指令：
+		 */
+		selectedLabel: () => LocalizedString
+		/**
+		 * 当前还没有已配置的快捷指令。
+		 */
+		noCommands: () => LocalizedString
+		/**
+		 * 完整帮助
+		 */
+		fullHelp: () => LocalizedString
+		/**
+		 * 编辑快捷指令
+		 */
+		editCommands: () => LocalizedString
+		/**
+		 * 编辑快捷指令
+		 */
+		editTitle: () => LocalizedString
+		/**
+		 * 点击按钮进行选择或移除。选择顺序就是显示顺序。
+		 */
+		editHint: () => LocalizedString
+		/**
+		 * 新选中的指令会追加到末尾。
+		 */
+		editAppendHint: () => LocalizedString
+		/**
+		 * 当前分组：
+		 */
+		currentGroup: () => LocalizedString
+		/**
+		 * 已选指令：
+		 */
+		selectedCommands: () => LocalizedString
+		/**
+		 * 当前还没有选中的快捷指令。
+		 */
+		noSelected: () => LocalizedString
+		/**
+		 * 分组页码：
+		 */
+		groupPage: () => LocalizedString
+		/**
+		 * 总页码：
+		 */
+		totalPage: () => LocalizedString
+		/**
+		 * 保存
+		 */
+		save: () => LocalizedString
+		/**
+		 * 恢复默认
+		 */
+		restoreDefault: () => LocalizedString
+	}
+	browser: {
+		/**
+		 * 文件浏览
+		 */
+		title: () => LocalizedString
+		/**
+		 * 当前项目：
+		 */
+		project: () => LocalizedString
+		/**
+		 * 当前位置：
+		 */
+		location: () => LocalizedString
+		/**
+		 * 页码：
+		 */
+		page: () => LocalizedString
+		/**
+		 * 模式：
+		 */
+		mode: () => LocalizedString
+		/**
+		 * 只读浏览
+		 */
+		readonly: () => LocalizedString
+		/**
+		 * 项目根
+		 */
+		root: () => LocalizedString
+		/**
+		 * 当前目录为空。
+		 */
+		empty: () => LocalizedString
+		/**
+		 * 上一级
+		 */
+		up: () => LocalizedString
+		/**
+		 * 回到项目根
+		 */
+		backToRoot: () => LocalizedString
+		/**
+		 * 刷新
+		 */
+		refresh: () => LocalizedString
+		/**
+		 * 在当前目录新建会话
+		 */
+		useCurrentDirectory: () => LocalizedString
+		/**
+		 * 文件预览
+		 */
+		previewTitle: () => LocalizedString
+		/**
+		 * 文件：
+		 */
+		file: () => LocalizedString
+		/**
+		 * 路径：
+		 */
+		path: () => LocalizedString
+		/**
+		 * 大小：
+		 */
+		size: () => LocalizedString
+		/**
+		 * 修改时间：
+		 */
+		modified: () => LocalizedString
+		/**
+		 * 预览页：
+		 */
+		previewPage: () => LocalizedString
+		/**
+		 * 仅预览前 48 KB。
+		 */
+		previewTruncated: () => LocalizedString
+		/**
+		 * 返回目录
+		 */
+		returnToDirectory: () => LocalizedString
+		/**
+		 * 文件信息
+		 */
+		infoTitle: () => LocalizedString
+		/**
+		 * 类型：
+		 */
+		type: () => LocalizedString
+		/**
+		 * 二进制或暂不支持预览
+		 */
+		binary: () => LocalizedString
+		/**
+		 * 图片预览
+		 */
+		imagePreview: () => LocalizedString
+		/**
+		 * 确认新建会话
+		 */
+		confirmNewSession: () => LocalizedString
+		/**
+		 * 目录：
+		 */
+		directory: () => LocalizedString
+		/**
+		 * 显示名：
+		 */
+		displayName: () => LocalizedString
+		/**
+		 * 要在这个目录新建会话吗？
+		 */
+		confirmNewInDirectory: () => LocalizedString
+		/**
+		 * 返回目录
+		 */
+		backToDirectory: () => LocalizedString
+	}
+	finalAnswer: {
+		/**
+		 * 展开全文
+		 */
+		expandFull: () => LocalizedString
+		/**
+		 * 收起
+		 */
+		collapse: () => LocalizedString
+		/**
+		 * 实施这个计划
+		 */
+		implementPlan: () => LocalizedString
+		/**
+		 * 最近输出
+		 */
+		recentOutput: () => LocalizedString
+		/**
+		 * 点击「展开最近输出」查看该会话最近一次输出。
+		 */
+		expandRecentOutputHint: () => LocalizedString
+		/**
+		 * 该会话还没有最近输出。
+		 */
+		noRecentOutput: () => LocalizedString
+		/**
+		 * 展开最近输出
+		 */
+		expandRecentOutput: () => LocalizedString
+		/**
+		 * 收起最近输出
+		 */
+		collapseRecentOutput: () => LocalizedString
+		/**
+		 * 展开方案
+		 */
+		expandPlan: () => LocalizedString
+		/**
+		 * 收起方案
+		 */
+		collapsePlan: () => LocalizedString
+		/**
+		 * 已开始实施。
+		 */
+		planConsumed: () => LocalizedString
+		/**
+		 * 已折叠，共 
+		 */
+		collapsedMultiPagePrefix: () => LocalizedString
+		/**
+		 *  页，点击
+		 */
+		collapsedMultiPageMiddle: () => LocalizedString
+		/**
+		 * 查看。
+		 */
+		collapsedMultiPageSuffix: () => LocalizedString
+		/**
+		 * 已折叠，点击
+		 */
+		collapsedSinglePrefix: () => LocalizedString
+		/**
+		 * 查看剩余内容。
+		 */
+		collapsedSingleSuffix: () => LocalizedString
+		/**
+		 * 第 
+		 */
+		pagePrefix: () => LocalizedString
+		/**
+		 *  页
+		 */
+		pageSuffix: () => LocalizedString
+	}
+	shared: {
+		/**
+		 * 刚刚
+		 */
+		justNow: () => LocalizedString
+		/**
+		 * 分钟前
+		 */
+		minutesAgo: () => LocalizedString
+		/**
+		 * 小时前
+		 */
+		hoursAgo: () => LocalizedString
+		/**
+		 * 天前
+		 */
+		daysAgo: () => LocalizedString
+		/**
+		 * 关闭
+		 */
+		effortNone: () => LocalizedString
+		/**
+		 * 极省
+		 */
+		effortMinimal: () => LocalizedString
+		/**
+		 * 低
+		 */
+		effortLow: () => LocalizedString
+		/**
+		 * 中
+		 */
+		effortMedium: () => LocalizedString
+		/**
+		 * 高
+		 */
+		effortHigh: () => LocalizedString
+		/**
+		 * 极高
+		 */
+		effortXhigh: () => LocalizedString
+	}
+	runtime: {
+		/**
+		 * 运行状态
+		 */
+		statusTitle: () => LocalizedString
+		/**
+		 * 状态
+		 */
+		state: () => LocalizedString
+		/**
+		 * 进度
+		 */
+		progress: () => LocalizedString
+		/**
+		 * 会话
+		 */
+		session: () => LocalizedString
+		/**
+		 * 收起计划清单
+		 */
+		hidePlan: () => LocalizedString
+		/**
+		 * 收起 Agent
+		 */
+		hideAgents: () => LocalizedString
+		/**
+		 * 计划清单:
+		 */
+		planLabel: () => LocalizedString
+		/**
+		 * Agent:
+		 */
+		agentsLabel: () => LocalizedString
+		/**
+		 * 计划详情
+		 */
+		planDetails: () => LocalizedString
+		/**
+		 * 协作 Agent
+		 */
+		collabAgents: () => LocalizedString
+		/**
+		 * 查看中
+		 */
+		viewing: () => LocalizedString
+		/**
+		 * 当前输入
+		 */
+		currentInput: () => LocalizedString
+		/**
+		 * 当前
+		 */
+		current: () => LocalizedString
+		/**
+		 * 查看详情
+		 */
+		inspect: () => LocalizedString
+		/**
+		 * 命令
+		 */
+		commands: () => LocalizedString
+		/**
+		 * 中断操作
+		 */
+		interrupt: () => LocalizedString
+		/**
+		 * 当前查看中的会话
+		 */
+		currentViewedSession: () => LocalizedString
+		/**
+		 * 其他运行中的会话
+		 */
+		otherRunningSessions: () => LocalizedString
+		/**
+		 * 最近结束的会话
+		 */
+		recentEndedSessions: () => LocalizedString
+		/**
+		 * 当前输入会话
+		 */
+		currentInputSession: () => LocalizedString
+		/**
+		 * 当前查看中的运行会话
+		 */
+		focusedRunningSession: () => LocalizedString
+		/**
+		 * 当前查看中的会话
+		 */
+		focusedSession: () => LocalizedString
+		/**
+		 * 其他会话
+		 */
+		otherSessions: () => LocalizedString
+		/**
+		 * 最近结束的会话
+		 */
+		recentTerminalSessions: () => LocalizedString
+		/**
+		 * 💡 提示：需要查看运行卡片时，可发送 /hub。
+		 */
+		hubTip: () => LocalizedString
+		/**
+		 * 💡 提示：使用 /inspect 查看详情，使用 /interrupt 打断，使用 /status 查看状态。
+		 */
+		surfaceFooter: () => LocalizedString
+		/**
+		 * 💡 /status | /inspect | /interrupt
+		 */
+		hubFooter: () => LocalizedString
+		/**
+		 * 计划清单
+		 */
+		planEntry: () => LocalizedString
+		fields: {
+			/**
+			 * 模型名
+			 */
+			modelName: () => LocalizedString
+			/**
+			 * 模型 + 推理强度
+			 */
+			modelWithReasoning: () => LocalizedString
+			/**
+			 * 当前目录
+			 */
+			currentDir: () => LocalizedString
+			/**
+			 * 项目根目录
+			 */
+			projectRoot: () => LocalizedString
+			/**
+			 * Git 分支
+			 */
+			gitBranch: () => LocalizedString
+			/**
+			 * 剩余上下文
+			 */
+			contextRemaining: () => LocalizedString
+			/**
+			 * 已用上下文
+			 */
+			contextUsed: () => LocalizedString
+			/**
+			 * 5 小时额度
+			 */
+			fiveHourLimit: () => LocalizedString
+			/**
+			 * 周额度
+			 */
+			weeklyLimit: () => LocalizedString
+			/**
+			 * Codex 版本
+			 */
+			codexVersion: () => LocalizedString
+			/**
+			 * 上下文窗口大小
+			 */
+			contextWindowSize: () => LocalizedString
+			/**
+			 * 已用 Token
+			 */
+			usedTokens: () => LocalizedString
+			/**
+			 * 累计输入 Token
+			 */
+			totalInputTokens: () => LocalizedString
+			/**
+			 * 累计输出 Token
+			 */
+			totalOutputTokens: () => LocalizedString
+			/**
+			 * 会话 ID
+			 */
+			sessionId: () => LocalizedString
+			/**
+			 * 会话名
+			 */
+			sessionName: () => LocalizedString
+			/**
+			 * 项目名
+			 */
+			projectName: () => LocalizedString
+			/**
+			 * 项目路径（旧）
+			 */
+			projectPath: () => LocalizedString
+			/**
+			 * Plan mode
+			 */
+			planMode: () => LocalizedString
+			/**
+			 * 模型 + 强度（旧）
+			 */
+			modelReasoning: () => LocalizedString
+			/**
+			 * 线程 ID（旧）
+			 */
+			threadId: () => LocalizedString
+			/**
+			 * Turn ID
+			 */
+			turnId: () => LocalizedString
+			/**
+			 * 阻塞原因
+			 */
+			blockedReason: () => LocalizedString
+			/**
+			 * 当前步骤
+			 */
+			currentStep: () => LocalizedString
+			/**
+			 * 本次 Token
+			 */
+			lastTokenUsage: () => LocalizedString
+			/**
+			 * 累计 Token
+			 */
+			totalTokenUsage: () => LocalizedString
+			/**
+			 * 上下文窗口
+			 */
+			contextWindow: () => LocalizedString
+			/**
+			 * 最终答复已就绪
+			 */
+			finalAnswerReady: () => LocalizedString
+		}
+		preferences: {
+			/**
+			 * 已应用 Runtime 卡片字段
+			 */
+			appliedTitle: () => LocalizedString
+			/**
+			 * 当前字段：
+			 */
+			currentFields: () => LocalizedString
+			/**
+			 * 已关闭 Runtime 卡片字段选择
+			 */
+			closedTitle: () => LocalizedString
+			/**
+			 * Runtime 卡片字段
+			 */
+			title: () => LocalizedString
+			/**
+			 * 按按钮选择要显示的字段。
+			 */
+			hint: () => LocalizedString
+			/**
+			 * 选择顺序就是显示顺序；新选中的字段会追加到末尾。
+			 */
+			orderHint: () => LocalizedString
+			/**
+			 * 当前分组：
+			 */
+			currentGroup: () => LocalizedString
+			/**
+			 * 已选字段：
+			 */
+			selectedFields: () => LocalizedString
+			/**
+			 * 当前没有已选字段。
+			 */
+			noSelectedFields: () => LocalizedString
+			/**
+			 * 分组页码：
+			 */
+			groupPage: () => LocalizedString
+			/**
+			 * 总页码：
+			 */
+			totalPage: () => LocalizedString
+			/**
+			 * 保存并应用
+			 */
+			save: () => LocalizedString
+			/**
+			 * 恢复默认
+			 */
+			reset: () => LocalizedString
+		}
+		planStatus: {
+			/**
+			 * 进行中
+			 */
+			inProgress: () => LocalizedString
+			/**
+			 * 已完成
+			 */
+			completed: () => LocalizedString
+			/**
+			 * 待处理
+			 */
+			pending: () => LocalizedString
+			/**
+			 * 失败
+			 */
+			failed: () => LocalizedString
+			/**
+			 * 阻塞中
+			 */
+			blocked: () => LocalizedString
+		}
+		agentStatus: {
+			/**
+			 * 等待初始化
+			 */
+			pendingInit: () => LocalizedString
+			/**
+			 * 运行中
+			 */
+			running: () => LocalizedString
+			/**
+			 * 已完成
+			 */
+			completed: () => LocalizedString
+			/**
+			 * 异常
+			 */
+			errored: () => LocalizedString
+			/**
+			 * 已停止
+			 */
+			stopped: () => LocalizedString
+			/**
+			 * 未找到
+			 */
+			notFound: () => LocalizedString
+			/**
+			 * 等待状态更新
+			 */
+			waitingForUpdate: () => LocalizedString
+		}
+		interactionState: {
+			/**
+			 * 待处理
+			 */
+			pending: () => LocalizedString
+			/**
+			 * 等待文字回答
+			 */
+			awaitingText: () => LocalizedString
+			/**
+			 * 已处理
+			 */
+			answered: () => LocalizedString
+			/**
+			 * 已取消
+			 */
+			canceled: () => LocalizedString
+			/**
+			 * 已过期
+			 */
+			expired: () => LocalizedString
+			/**
+			 * 处理失败
+			 */
+			failed: () => LocalizedString
+		}
+		interaction: {
+			/**
+			 * 类型：
+			 */
+			type: () => LocalizedString
+			/**
+			 * 内容：
+			 */
+			body: () => LocalizedString
+			/**
+			 * 说明：
+			 */
+			detail: () => LocalizedString
+			/**
+			 * 取消本次交互
+			 */
+			cancelInteraction: () => LocalizedString
+			/**
+			 * 问题：
+			 */
+			questionLabel: () => LocalizedString
+			/**
+			 * 标题：
+			 */
+			headerLabel: () => LocalizedString
+			/**
+			 * 这条回答会按敏感输入处理，不会进入可见摘要。
+			 */
+			secretNotice: () => LocalizedString
+			/**
+			 * 当前正在等待你直接发送这条问题的文字回答。
+			 */
+			awaitingTextNotice: () => LocalizedString
+			/**
+			 * 点击下方按钮后，直接在聊天里发送你的回答。
+			 */
+			sendTextPrompt: () => LocalizedString
+			/**
+			 * 发送文字回答
+			 */
+			sendTextAnswer: () => LocalizedString
+			/**
+			 * 状态：
+			 */
+			stateLabel: () => LocalizedString
+			/**
+			 * 结果：
+			 */
+			resultLabel: () => LocalizedString
+			/**
+			 * 已提交回答
+			 */
+			submittedAnswers: () => LocalizedString
+			/**
+			 * 收起已提交回答
+			 */
+			collapseAnswers: () => LocalizedString
+			/**
+			 * 查看已提交回答
+			 */
+			expandAnswers: () => LocalizedString
+			/**
+			 * 已过期
+			 */
+			expiredLabel: () => LocalizedString
+		}
+		inspectSection: {
+			/**
+			 * 详情已折叠，点击按钮展开。
+			 */
+			collapseHint: () => LocalizedString
+			/**
+			 * 展开详情
+			 */
+			expandDetails: () => LocalizedString
+			/**
+			 * 收起详情
+			 */
+			collapseDetails: () => LocalizedString
+			/**
+			 * 详情页：
+			 */
+			detailPage: () => LocalizedString
+			/**
+			 * 当前任务详情
+			 */
+			currentTaskDetails: () => LocalizedString
+			/**
+			 * 会话：
+			 */
+			session: () => LocalizedString
+			/**
+			 * 项目：
+			 */
+			project: () => LocalizedString
+			/**
+			 * 状态：
+			 */
+			state: () => LocalizedString
+			/**
+			 * 阻塞原因：
+			 */
+			blockedReason: () => LocalizedString
+			/**
+			 * 当前动作：
+			 */
+			currentAction: () => LocalizedString
+			/**
+			 * 已耗时：
+			 */
+			elapsedTime: () => LocalizedString
+			/**
+			 * 最近结论：
+			 */
+			recentConclusion: () => LocalizedString
+			/**
+			 * 最终答复：
+			 */
+			finalAnswerReady: () => LocalizedString
+			/**
+			 * 已就绪
+			 */
+			ready: () => LocalizedString
+			/**
+			 * 说明：
+			 */
+			note: () => LocalizedString
+			/**
+			 * 最近动作
+			 */
+			recentActions: () => LocalizedString
+			/**
+			 * 最近命令
+			 */
+			recentCommands: () => LocalizedString
+			/**
+			 * 最近文件变更
+			 */
+			recentFileChanges: () => LocalizedString
+			/**
+			 * 最近工具与搜索
+			 */
+			recentToolsAndSearch: () => LocalizedString
+			/**
+			 * 最近 Hook
+			 */
+			recentHooks: () => LocalizedString
+			/**
+			 * 提示与告警
+			 */
+			noticesAndWarnings: () => LocalizedString
+			/**
+			 * Token 用量
+			 */
+			tokenUsage: () => LocalizedString
+			/**
+			 * 最近差异
+			 */
+			recentDiff: () => LocalizedString
+			/**
+			 * 计划清单
+			 */
+			planList: () => LocalizedString
+			/**
+			 * 方案草稿
+			 */
+			planDraft: () => LocalizedString
+			/**
+			 * 补充说明
+			 */
+			supplementaryNotes: () => LocalizedString
+			/**
+			 * 待处理交互
+			 */
+			pendingInteractions: () => LocalizedString
+			/**
+			 * 最近已答交互
+			 */
+			recentAnsweredInteractions: () => LocalizedString
+			/**
+			 * 命令：
+			 */
+			commandLabel: () => LocalizedString
+			/**
+			 * 状态：
+			 */
+			commandState: () => LocalizedString
+			/**
+			 * 结果：
+			 */
+			commandResult: () => LocalizedString
+			/**
+			 * 目录：
+			 */
+			commandDirectory: () => LocalizedString
+			/**
+			 * 退出码：
+			 */
+			commandExitCode: () => LocalizedString
+			/**
+			 * 耗时：
+			 */
+			commandDuration: () => LocalizedString
+			/**
+			 * ，等待文字回答
+			 */
+			awaitingTextSuffix: () => LocalizedString
+			/**
+			 * 开始执行
+			 */
+			turnStarted: () => LocalizedString
+			/**
+			 * 执行结束（
+			 */
+			turnCompleted: () => LocalizedString
+			/**
+			 * 线程阻塞（
+			 */
+			threadBlocked: () => LocalizedString
+			/**
+			 * 线程状态：
+			 */
+			threadStatus: () => LocalizedString
+			/**
+			 * 开始：
+			 */
+			itemStarted: () => LocalizedString
+			/**
+			 * 完成：
+			 */
+			itemCompleted: () => LocalizedString
+		}
+		rollback: {
+			/**
+			 * 选择回滚目标
+			 */
+			selectTarget: () => LocalizedString
+			/**
+			 * 只展示用户输入，不展示 agent 输出。
+			 */
+			onlyUserInput: () => LocalizedString
+			/**
+			 * 页码：
+			 */
+			pageLabel: () => LocalizedString
+			/**
+			 * 确认回滚
+			 */
+			confirmRollback: () => LocalizedString
+			/**
+			 * 目标：
+			 */
+			targetLabel: () => LocalizedString
+			/**
+			 * 将删除的 turn 数：
+			 */
+			turnCountToDelete: () => LocalizedString
+			/**
+			 * 本地文件改动不会自动撤销。
+			 */
+			localChangesWarning: () => LocalizedString
+			/**
+			 * 确认回滚
+			 */
+			confirmButton: () => LocalizedString
+			/**
+			 * 返回列表
+			 */
+			backToList: () => LocalizedString
+			/**
+			 * 已关闭回滚目标选择
+			 */
+			closedTitle: () => LocalizedString
+			/**
+			 * 未执行回滚。
+			 */
+			notRolledBack: () => LocalizedString
+			/**
+			 * 已关闭活动详情
+			 */
+			closedInspectTitle: () => LocalizedString
+			/**
+			 * 重新发送 /inspect 可再次打开。
+			 */
+			reopenHint: () => LocalizedString
+		}
+		currentStep: {
+			/**
+			 * 等待批准
+			 */
+			waitingForApproval: () => LocalizedString
+			/**
+			 * 等待输入
+			 */
+			waitingForInput: () => LocalizedString
+			/**
+			 * 正在更新计划
+			 */
+			updatingPlan: () => LocalizedString
+			/**
+			 * 正在运行命令
+			 */
+			runningCommand: () => LocalizedString
+			/**
+			 * 正在修改文件
+			 */
+			editingFiles: () => LocalizedString
+			/**
+			 * 正在调用 MCP 工具
+			 */
+			callingMcpTool: () => LocalizedString
+			/**
+			 * 正在进行网页搜索
+			 */
+			webSearch: () => LocalizedString
+			/**
+			 * 正在整理回复
+			 */
+			draftingResponse: () => LocalizedString
+			/**
+			 * 正在思考
+			 */
+			thinking: () => LocalizedString
+			/**
+			 * 正在处理任务
+			 */
+			processingTask: () => LocalizedString
+			/**
+			 * 等待第一条活动
+			 */
+			waitingForFirstActivity: () => LocalizedString
+			/**
+			 * 正在处理中
+			 */
+			processing: () => LocalizedString
+			/**
+			 * 等待继续
+			 */
+			waitingToContinue: () => LocalizedString
+			/**
+			 * 当前没有进行中的步骤
+			 */
+			noActiveStep: () => LocalizedString
+			/**
+			 * 已中断，没有进行中的步骤
+			 */
+			interruptedNoStep: () => LocalizedString
+			/**
+			 * 执行失败，没有进行中的步骤
+			 */
+			failedNoStep: () => LocalizedString
+			/**
+			 * 等待活动
+			 */
+			waitingForActivity: () => LocalizedString
+		}
+		milestone: {
+			/**
+			 * 最终答复已生成
+			 */
+			replyGenerated: () => LocalizedString
+		}
+		threadStatus: {
+			/**
+			 * 未加载
+			 */
+			notLoaded: () => LocalizedString
+			/**
+			 * 空闲
+			 */
+			idle: () => LocalizedString
+			/**
+			 * 活跃
+			 */
+			active: () => LocalizedString
+			/**
+			 * 系统错误
+			 */
+			systemError: () => LocalizedString
+		}
+		blockedToken: {
+			/**
+			 * 等待批准
+			 */
+			waitingOnApproval: () => LocalizedString
+			/**
+			 * 等待输入
+			 */
+			waitingOnUserInput: () => LocalizedString
+		}
+		commandState: {
+			/**
+			 * 进行中
+			 */
+			running: () => LocalizedString
+			/**
+			 * 已完成
+			 */
+			completed: () => LocalizedString
+			/**
+			 * 失败
+			 */
+			failed: () => LocalizedString
+			/**
+			 * 已中断
+			 */
+			interrupted: () => LocalizedString
+		}
+		optionalLabel: {
+			/**
+			 * 模型
+			 */
+			model: () => LocalizedString
+			/**
+			 * 目录
+			 */
+			currentDir: () => LocalizedString
+		}
+		/**
+		 * ... 还有 
+		 */
+		moreStepsPrefix: () => LocalizedString
+		/**
+		 *  个步骤
+		 */
+		moreStepsSuffix: () => LocalizedString
+		/**
+		 * ... 还有 
+		 */
+		moreAgentsPrefix: () => LocalizedString
+		/**
+		 *  个 Agent
+		 */
+		moreAgentsSuffix: () => LocalizedString
+		/**
+		 * ... 还有 
+		 */
+		morePlanItemsPrefix: () => LocalizedString
+		/**
+		 *  项计划
+		 */
+		morePlanItemsSuffix: () => LocalizedString
+		/**
+		 * ... 还有 
+		 */
+		moreSessionsPrefix: () => LocalizedString
+		/**
+		 *  个会话未显示
+		 */
+		moreSessionsSuffix: () => LocalizedString
+		/**
+		 *  个运行中
+		 */
+		agentsRunningSuffix: () => LocalizedString
+		/**
+		 *  个
+		 */
+		selectedFieldCountSuffix: () => LocalizedString
+		/**
+		 * 本次：
+		 */
+		tokenUsageThisPrefix: () => LocalizedString
+		/**
+		 * 累计：
+		 */
+		tokenUsageTotalPrefix: () => LocalizedString
+		/**
+		 * 输入 
+		 */
+		tokenUsageInput: () => LocalizedString
+		/**
+		 * ，输出 
+		 */
+		tokenUsageOutput: () => LocalizedString
+		/**
+		 * ，缓存 
+		 */
+		tokenUsageCache: () => LocalizedString
+		/**
+		 * ，推理 
+		 */
+		tokenUsageReasoning: () => LocalizedString
+		/**
+		 * 上下文窗口：
+		 */
+		tokenContextWindowPrefix: () => LocalizedString
+		inspectTurnStatus: {
+			/**
+			 * 空闲
+			 */
+			idle: () => LocalizedString
+			/**
+			 * 准备中
+			 */
+			starting: () => LocalizedString
+			/**
+			 * 执行中
+			 */
+			running: () => LocalizedString
+			/**
+			 * 等待中
+			 */
+			blocked: () => LocalizedString
+			/**
+			 * 已中断
+			 */
+			interrupted: () => LocalizedString
+			/**
+			 * 已完成
+			 */
+			completed: () => LocalizedString
+			/**
+			 * 失败
+			 */
+			failed: () => LocalizedString
+			/**
+			 * 未知
+			 */
+			unknown: () => LocalizedString
 		}
 	}
 }

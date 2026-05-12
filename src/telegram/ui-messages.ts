@@ -44,33 +44,36 @@ function displayProjectName(projectName: string, projectAlias: string | null | u
   return projectAlias?.trim() || projectName;
 }
 
-function buildSessionProjectContextBlock(title: string, sessionName: string, projectName: string): string {
+function buildSessionProjectContextBlock(title: string, sessionName: string, projectName: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   return [
     formatHtmlHeading(title),
-    formatHtmlField("会话名：", sessionName),
-    formatHtmlField("项目：", projectName)
+    formatHtmlField(LL.where.sessionName(), sessionName),
+    formatHtmlField(LL.where.project(), projectName)
   ].join("\n");
 }
 
-function buildProjectBadgeLabels(candidate: ProjectCandidate): string[] {
+function buildProjectBadgeLabels(candidate: ProjectCandidate, language: UiLanguage): string[] {
+  const LL = getTranslator(language);
   const labels: string[] = [];
   if (candidate.group !== "recent" && candidate.isRecent) {
-    labels.push("最近");
+    labels.push(LL.projects.badges.recent());
   }
   if (candidate.group !== "discovered" && candidate.fromScan) {
-    labels.push("本地发现");
+    labels.push(LL.projects.badges.locallyDiscovered());
   }
   if (candidate.hasExistingSession) {
-    labels.push("有历史会话");
+    labels.push(LL.projects.badges.hasHistory());
   }
 
   return labels;
 }
 
-export function buildProjectPickerMessage(picker: ProjectPickerResult): {
+export function buildProjectPickerMessage(picker: ProjectPickerResult, language: UiLanguage = "zh"): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const LL = getTranslator(language);
   const rows: TelegramInlineKeyboardMarkup["inline_keyboard"] = [];
   const visibleCandidates = picker.groups.flatMap((group) => group.candidates);
   const candidateButtons = visibleCandidates.map((candidate, index) => ({
@@ -80,23 +83,23 @@ export function buildProjectPickerMessage(picker: ProjectPickerResult): {
 
   rows.push(...chunkButtons(candidateButtons, 5));
   rows.push([
-    { text: "浏览目录", callback_data: encodeNewBrowseOpenCallback() },
-    { text: "手动输入路径", callback_data: encodePathManualCallback() }
+    { text: LL.projects.browseDirectory(), callback_data: encodeNewBrowseOpenCallback() },
+    { text: LL.projects.enterPath(), callback_data: encodePathManualCallback() }
   ]);
 
-  const lines = [picker.title];
+  const lines: string[] = [LL.projects.pickerTitle()];
   for (const noticeLine of picker.noticeLines) {
     lines.push("", noticeLine);
   }
   if (picker.emptyText) {
-    lines.push("", picker.emptyText);
+    lines.push("", LL.projects.empty());
   }
 
   let itemIndex = 1;
   for (const group of picker.groups) {
-    lines.push("", group.title);
+    lines.push("", formatProjectPickerGroupTitle(group.key, language));
     for (const candidate of group.candidates) {
-      const badges = buildProjectBadgeLabels(candidate);
+      const badges = buildProjectBadgeLabels(candidate, language);
       lines.push(`${itemIndex}. ${candidate.displayName}`);
       lines.push(`   ${candidate.pathLabel}`);
       if (badges.length > 0) {
@@ -112,19 +115,32 @@ export function buildProjectPickerMessage(picker: ProjectPickerResult): {
   };
 }
 
+function formatProjectPickerGroupTitle(group: ProjectPickerResult["groups"][number]["key"], language: UiLanguage): string {
+  const LL = getTranslator(language);
+  switch (group) {
+    case "pinned":
+      return LL.projects.groups.pinned();
+    case "recent":
+      return LL.projects.groups.recent();
+  }
+}
+
 export function buildProjectBrowseRootPickerMessage(options: {
   roots: Array<{ index: number; label: string; pathLabel: string }>;
+  language?: UiLanguage;
 }): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const rows: TelegramInlineKeyboardMarkup["inline_keyboard"] = options.roots.map((root) => [{
     text: `${root.index + 1}`,
     callback_data: encodeNewBrowseRootCallback(root.index)
   }]);
-  rows.push([{ text: "返回项目列表", callback_data: encodeNewBrowseBackCallback() }]);
+  rows.push([{ text: LL.projects.backToProjects(), callback_data: encodeNewBrowseBackCallback() }]);
 
-  const lines = ["选择要浏览的根目录"];
+  const lines: string[] = [LL.projects.selectRoot()];
   for (const root of options.roots) {
     lines.push("");
     lines.push(`${root.index + 1}. ${root.label}`);
@@ -137,48 +153,51 @@ export function buildProjectBrowseRootPickerMessage(options: {
   };
 }
 
-export function buildManualPathPrompt(): {
+export function buildManualPathPrompt(language: UiLanguage = "zh"): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const LL = getTranslator(language);
   return {
-    text: "请发送要开始会话的目录路径，例如：/home/ubuntu/Repo/openclaw\n发送 /cancel 返回项目列表。",
+    text: LL.projects.manualPathPrompt(),
     replyMarkup: {
-      inline_keyboard: [[{ text: "返回项目列表", callback_data: encodePathBackCallback() }]]
+      inline_keyboard: [[{ text: LL.projects.backToProjects(), callback_data: encodePathBackCallback() }]]
     }
   };
 }
 
-export function buildManualPathConfirmMessage(candidate: ProjectCandidate): {
+export function buildManualPathConfirmMessage(candidate: ProjectCandidate, language: UiLanguage = "zh"): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const LL = getTranslator(language);
   return {
     text: [
-      "要在这个目录中新建会话吗？",
-      formatHtmlField("项目：", candidate.displayName),
-      formatHtmlField("路径：", candidate.projectPath)
+      LL.projects.confirmNewSession(),
+      formatHtmlField(LL.where.project(), candidate.displayName),
+      formatHtmlField(LL.where.path(), candidate.projectPath)
     ].join("\n"),
     replyMarkup: {
       inline_keyboard: [
-        [{ text: "确认新建会话", callback_data: encodePathConfirmCallback(candidate.projectKey) }],
-        [{ text: "返回项目列表", callback_data: encodePathBackCallback() }]
+        [{ text: LL.projects.confirmNewSessionButton(), callback_data: encodePathConfirmCallback(candidate.projectKey) }],
+        [{ text: LL.projects.backToProjects(), callback_data: encodePathBackCallback() }]
       ]
     }
   };
 }
 
-export function buildNoNewProjectsMessage(): {
+export function buildNoNewProjectsMessage(language: UiLanguage = "zh"): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const LL = getTranslator(language);
   return {
-    text: "这个入口已下线。请使用浏览目录或手动输入路径。",
+    text: LL.projects.offlineEntry(),
     replyMarkup: {
       inline_keyboard: [
-        [{ text: "浏览目录", callback_data: encodeNewBrowseOpenCallback() }],
-        [{ text: "手动输入路径", callback_data: encodePathManualCallback() }],
-        [{ text: "返回项目列表", callback_data: encodePathBackCallback() }]
+        [{ text: LL.projects.browseDirectory(), callback_data: encodeNewBrowseOpenCallback() }],
+        [{ text: LL.projects.enterPath(), callback_data: encodePathManualCallback() }],
+        [{ text: LL.projects.backToProjects(), callback_data: encodePathBackCallback() }]
       ]
     }
   };
@@ -209,40 +228,45 @@ export function buildModelPickerMessage(options: {
   models: ModelPickerOption[];
   page: number;
   modelState?: SessionModelDisplayState;
+  language?: UiLanguage;
 }): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const state = resolveModelDisplayState(options.session, options.modelState);
   const totalPages = Math.max(1, Math.ceil(options.models.length / MODEL_PAGE_SIZE));
   const safePage = Math.min(Math.max(options.page, 0), totalPages - 1);
   const pageModels = options.models.slice(safePage * MODEL_PAGE_SIZE, (safePage + 1) * MODEL_PAGE_SIZE);
   const rows: TelegramInlineKeyboardMarkup["inline_keyboard"] = [
-    [{ text: buildDefaultModelButtonLabel(state), callback_data: encodeModelDefaultCallback(options.session.sessionId) }],
+    [{ text: buildDefaultModelButtonLabel(state, language), callback_data: encodeModelDefaultCallback(options.session.sessionId) }],
     ...pageModels.map((model, index) => [{
-      text: buildModelButtonLabel(model, state),
+      text: buildModelButtonLabel(model, state, language),
       callback_data: encodeModelPickCallback(options.session.sessionId, safePage * MODEL_PAGE_SIZE + index)
     }])
   ];
   const navigation: Array<{ text: string; callback_data: string }> = [];
   if (safePage > 0) {
-    navigation.push({ text: "上一页", callback_data: encodeModelPageCallback(options.session.sessionId, safePage - 1) });
+    navigation.push({ text: LL.common.previousPage(), callback_data: encodeModelPageCallback(options.session.sessionId, safePage - 1) });
   }
   if (safePage + 1 < totalPages) {
-    navigation.push({ text: "下一页", callback_data: encodeModelPageCallback(options.session.sessionId, safePage + 1) });
+    navigation.push({ text: LL.common.nextPage(), callback_data: encodeModelPageCallback(options.session.sessionId, safePage + 1) });
   }
   if (navigation.length > 0) {
     rows.push(navigation);
   }
-  rows.push([{ text: "关闭", callback_data: encodeModelCloseCallback(options.session.sessionId) }]);
+  rows.push([{ text: LL.common.close(), callback_data: encodeModelCloseCallback(options.session.sessionId) }]);
 
   return {
     text: [
-      "选择模型",
-      `当前配置：${formatModelReasoning(state.configuredModel, state.configuredReasoningEffort)}`,
-      `当前生效：${formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort)}`,
-      `第 ${safePage + 1}/${totalPages} 页`,
-      "先选模型，再按该模型支持情况选择思考强度。"
+      LL.model.selectModel(),
+      `${LL.model.current()}${LL.common.configured()}：${formatModelReasoning(state.configuredModel, state.configuredReasoningEffort, language)}`,
+      `${LL.model.current()}${LL.common.effective()}：${formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort, language)}`,
+      language === "en"
+        ? `${LL.model.pageLabel()} ${safePage + 1}/${totalPages}`
+        : `第 ${safePage + 1}/${totalPages} ${LL.model.pageLabel()}`,
+      LL.model.modelTip()
     ].join("\n"),
     replyMarkup: { inline_keyboard: rows }
   };
@@ -256,33 +280,36 @@ export function buildReasoningEffortPickerMessage(options: {
   };
   modelIndex: number;
   modelState?: SessionModelDisplayState;
+  language?: UiLanguage;
 }): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const state = resolveModelDisplayState(options.session, options.modelState);
   const isConfiguredModel = state.configuredModel === options.model.id;
   const isEffectiveModel = state.effectiveModel === options.model.id;
   const effortButtons = options.model.supportedReasoningEfforts.map((option) => ({
-    text: buildReasoningEffortButtonLabel(option.reasoningEffort, state, isConfiguredModel, isEffectiveModel),
+    text: buildReasoningEffortButtonLabel(option.reasoningEffort, state, isConfiguredModel, isEffectiveModel, language),
     callback_data: encodeModelEffortCallback(options.session.sessionId, options.modelIndex, option.reasoningEffort)
   }));
   const rows = [
     [{
-      text: buildDefaultEffortButtonLabel(options.model.defaultReasoningEffort, state, isConfiguredModel, isEffectiveModel),
+      text: buildDefaultEffortButtonLabel(options.model.defaultReasoningEffort, state, isConfiguredModel, isEffectiveModel, language),
       callback_data: encodeModelEffortCallback(options.session.sessionId, options.modelIndex, null)
     }],
     ...chunkButtons(effortButtons, 2),
-    [{ text: "关闭", callback_data: encodeModelCloseCallback(options.session.sessionId) }]
+    [{ text: LL.common.close(), callback_data: encodeModelCloseCallback(options.session.sessionId) }]
   ];
 
   return {
     text: [
-      "选择思考强度",
-      `模型：${options.model.id}`,
-      `当前配置：${formatModelReasoning(state.configuredModel, state.configuredReasoningEffort)}`,
-      `当前生效：${formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort)}`,
-      "仅展示这个模型实际支持的档位。"
+      LL.model.selectEffort(),
+      language === "en" ? `Model: ${options.model.id}` : `模型：${options.model.id}`,
+      `${LL.model.current()}${LL.common.configured()}：${formatModelReasoning(state.configuredModel, state.configuredReasoningEffort, language)}`,
+      `${LL.model.current()}${LL.common.effective()}：${formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort, language)}`,
+      LL.model.effortTip()
     ].join("\n"),
     replyMarkup: { inline_keyboard: rows }
   };
@@ -397,13 +424,13 @@ export function buildSessionsText(options: {
 
   const lines: string[] = [title];
   options.sessions.forEach((session, index) => {
-    const marker = !options.archived && session.sessionId === options.activeSessionId ? "[当前] " : "";
+    const marker = !options.archived && session.sessionId === options.activeSessionId ? LL.sessions.currentMarker() : "";
     const parts = [
       `${marker}${session.displayName}`,
       displayProjectName(session.projectName, session.projectAlias),
       formatSessionState(session, language),
       formatLastTurnSummary(session, language),
-      formatRelativeTime(session.lastUsedAt)
+      formatRelativeTime(session.lastUsedAt, language)
     ].filter((value): value is string => Boolean(value));
 
     lines.push(`${index + 1}. ${parts.join(" | ")}`);
@@ -412,24 +439,28 @@ export function buildSessionsText(options: {
   return lines.join("\n");
 }
 
-export function buildProjectSelectedText(projectName: string): string {
-  return formatHtmlField("当前项目：", projectName);
+export function buildProjectSelectedText(projectName: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return formatHtmlField(LL.projects.currentProject(), projectName);
 }
 
-export function buildSessionCreatedText(sessionName: string, projectPath: string): string {
+export function buildSessionCreatedText(sessionName: string, projectPath: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   return [
-    formatHtmlHeading("已新建会话"),
-    formatHtmlField("会话名：", sessionName),
-    formatHtmlField("路径：", projectPath)
+    formatHtmlHeading(LL.projects.newSessionCreated()),
+    formatHtmlField(LL.where.sessionName(), sessionName),
+    formatHtmlField(LL.where.path(), projectPath)
   ].join("\n");
 }
 
-export function buildSessionSwitchedText(sessionName: string, projectName: string): string {
-  return buildSessionProjectContextBlock("已切换会话", sessionName, projectName);
+export function buildSessionSwitchedText(sessionName: string, projectName: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return buildSessionProjectContextBlock(LL.projects.sessionSwitched(), sessionName, projectName, language);
 }
 
-export function buildSessionResumedText(sessionName: string, projectName: string): string {
-  return buildSessionProjectContextBlock("已恢复 Codex 会话", sessionName, projectName);
+export function buildSessionResumedText(sessionName: string, projectName: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return buildSessionProjectContextBlock(LL.projects.codexSessionResumed(), sessionName, projectName, language);
 }
 
 export function buildResumeThreadListText(threads: Array<{
@@ -442,28 +473,44 @@ export function buildResumeThreadListText(threads: Array<{
   pageSize?: number;
   hasNext?: boolean;
   includeAll?: boolean;
+  language?: UiLanguage;
 } = {}): string {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const page = Math.max(1, Math.trunc(options.page ?? 1));
   const pageSize = Math.max(1, Math.trunc(options.pageSize ?? 10));
   const includeAll = options.includeAll ?? false;
+  const allFlag = includeAll ? "all " : "";
   if (threads.length === 0) {
-    return escapeHtml(`可恢复的 Codex 会话（第 ${page} 页）\n暂无会话。${page > 1 ? `\n上一页：/resume ${includeAll ? "all " : ""}page ${page - 1}` : ""}`);
+    const title = language === "en"
+      ? `${LL.sessions.resumeTitle()} (${LL.model.pageLabel()} ${page})`
+      : `${LL.sessions.resumeTitle()}（第 ${page} ${LL.model.pageLabel()}）`;
+    const nav = page > 1 ? `\n${LL.common.previousPage()}：/resume ${allFlag}page ${page - 1}` : "";
+    return escapeHtml(`${title}\n${LL.sessions.resumeEmpty()}${nav}`);
   }
 
-  const lines = [`可恢复的 Codex 会话（第 ${page} 页）`, `发送 /resume ${includeAll ? "all " : ""}<序号> 恢复。`];
+  const title = language === "en"
+    ? `${LL.sessions.resumeTitle()} (${LL.model.pageLabel()} ${page})`
+    : `${LL.sessions.resumeTitle()}（第 ${page} ${LL.model.pageLabel()}）`;
+  const lines = [
+    title,
+    language === "en"
+      ? `Send /resume ${allFlag}<number> to resume.`
+      : `发送 /resume ${allFlag}<序号> 恢复。`
+  ];
   threads.forEach((thread, index) => {
     const ordinal = (page - 1) * pageSize + index + 1;
     const projectName = basename(thread.cwd);
     const title = thread.name?.trim() || thread.preview?.trim() || projectName;
     const preview = thread.preview?.trim() && thread.preview.trim() !== title ? ` | ${thread.preview.trim()}` : "";
-    const updatedAt = formatResumeThreadRelativeTime(thread.updatedAt);
+    const updatedAt = formatResumeThreadRelativeTime(thread.updatedAt, language);
     lines.push(`${ordinal}. ${title} | ${projectName}${preview}${updatedAt ? ` | ${updatedAt}` : ""}`);
   });
   if (page > 1) {
-    lines.push(`上一页：/resume ${includeAll ? "all " : ""}page ${page - 1}`);
+    lines.push(`${LL.common.previousPage()}：/resume ${allFlag}page ${page - 1}`);
   }
   if (options.hasNext) {
-    lines.push(`下一页：/resume ${includeAll ? "all " : ""}page ${page + 1}`);
+    lines.push(`${LL.common.nextPage()}：/resume ${allFlag}page ${page + 1}`);
   }
 
   return escapeHtml(lines.join("\n"));
@@ -479,10 +526,13 @@ export function buildResumeThreadListMessage(threads: Array<{
   pageSize?: number;
   hasNext?: boolean;
   includeAll?: boolean;
+  language?: UiLanguage;
 } = {}): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const page = Math.max(1, Math.trunc(options.page ?? 1));
   const pageSize = Math.max(1, Math.trunc(options.pageSize ?? 10));
   const includeAll = options.includeAll ?? false;
@@ -495,15 +545,15 @@ export function buildResumeThreadListMessage(threads: Array<{
 
   const navigation: Array<{ text: string; callback_data: string }> = [];
   if (page > 1) {
-    navigation.push({ text: "上一页", callback_data: encodeResumePageCallback(includeAll, page - 1) });
+    navigation.push({ text: LL.common.previousPage(), callback_data: encodeResumePageCallback(includeAll, page - 1) });
   }
   if (options.hasNext) {
-    navigation.push({ text: "下一页", callback_data: encodeResumePageCallback(includeAll, page + 1) });
+    navigation.push({ text: LL.common.nextPage(), callback_data: encodeResumePageCallback(includeAll, page + 1) });
   }
   if (navigation.length > 0) {
     rows.push(navigation);
   }
-  rows.push([{ text: "关闭", callback_data: encodeResumeCloseCallback() }]);
+  rows.push([{ text: LL.common.close(), callback_data: encodeResumeCloseCallback() }]);
 
   return {
     text: buildResumeThreadListText(threads, options),
@@ -513,14 +563,14 @@ export function buildResumeThreadListMessage(threads: Array<{
   };
 }
 
-function formatResumeThreadRelativeTime(value: number | string): string | null {
+function formatResumeThreadRelativeTime(value: number | string, language: UiLanguage = "zh"): string | null {
   if (typeof value === "string") {
     const numeric = Number(value);
     if (Number.isFinite(numeric)) {
-      return formatResumeThreadRelativeTime(numeric);
+      return formatResumeThreadRelativeTime(numeric, language);
     }
     const parsed = Date.parse(value);
-    return Number.isFinite(parsed) ? formatRelativeTime(new Date(parsed).toISOString()) : null;
+    return Number.isFinite(parsed) ? formatRelativeTime(new Date(parsed).toISOString(), language) : null;
   }
 
   if (!Number.isFinite(value)) {
@@ -528,7 +578,7 @@ function formatResumeThreadRelativeTime(value: number | string): string | null {
   }
 
   const milliseconds = value < 100_000_000_000 ? value * 1000 : value;
-  return formatRelativeTime(new Date(milliseconds).toISOString());
+  return formatRelativeTime(new Date(milliseconds).toISOString(), language);
 }
 
 export function buildArchiveSuccessText(
@@ -541,23 +591,25 @@ export function buildArchiveSuccessText(
     displayName: string;
     projectName: string;
     projectAlias?: string | null;
-  } | null
+  } | null,
+  language: UiLanguage = "zh"
 ): string {
+  const LL = getTranslator(language);
   const lines = [
-    formatHtmlHeading("已归档会话"),
-    formatHtmlField("会话名：", session.displayName),
-    formatHtmlField("项目：", displayProjectName(session.projectName, session.projectAlias ?? null))
+    formatHtmlHeading(LL.projects.archivedSession()),
+    formatHtmlField(LL.where.sessionName(), session.displayName),
+    formatHtmlField(LL.where.project(), displayProjectName(session.projectName, session.projectAlias ?? null))
   ];
   if (nextActiveSession) {
-    lines.push(formatHtmlField("当前会话：", nextActiveSession.displayName));
+    lines.push(formatHtmlField(LL.status.currentSession(), nextActiveSession.displayName));
     lines.push(
       formatHtmlField(
-        "当前项目：",
+        LL.projects.currentProject(),
         displayProjectName(nextActiveSession.projectName, nextActiveSession.projectAlias ?? null)
       )
     );
   } else {
-    lines.push("当前没有活动会话，请发送 /new 选择项目。");
+    lines.push(LL.projects.noActiveSession());
   }
 
   return lines.join("\n");
@@ -572,61 +624,70 @@ export function buildArchiveAllSuccessText(options: {
     projectName: string;
     projectAlias?: string | null;
   } | null;
+  language?: UiLanguage;
 }): string {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const lines = [
-    formatHtmlHeading("已批量归档会话"),
-    formatHtmlField("已归档：", `${options.archivedCount} 个`)
+    formatHtmlHeading(LL.sessions.batchArchivedTitle()),
+    formatHtmlField(LL.projects.batchArchived(), `${options.archivedCount} ${LL.model.countUnit()}`)
   ];
 
   if (options.skippedRunningCount > 0) {
-    lines.push(formatHtmlField("已跳过运行中：", `${options.skippedRunningCount} 个`));
+    lines.push(formatHtmlField(LL.projects.batchSkippedRunning(), `${options.skippedRunningCount} ${LL.model.countUnit()}`));
   }
 
   if (options.failedCount > 0) {
-    lines.push(formatHtmlField("失败：", `${options.failedCount} 个`));
+    lines.push(formatHtmlField(LL.projects.batchFailed(), `${options.failedCount} ${LL.model.countUnit()}`));
   }
 
   if (options.nextActiveSession) {
-    lines.push(formatHtmlField("当前会话：", options.nextActiveSession.displayName));
+    lines.push(formatHtmlField(LL.status.currentSession(), options.nextActiveSession.displayName));
     lines.push(
       formatHtmlField(
-        "当前项目：",
+        LL.projects.currentProject(),
         displayProjectName(options.nextActiveSession.projectName, options.nextActiveSession.projectAlias ?? null)
       )
     );
   } else {
-    lines.push("当前没有活动会话，请发送 /new 选择项目。");
+    lines.push(LL.projects.noActiveSession());
   }
 
   return lines.join("\n");
 }
 
-export function buildUnarchiveSuccessText(sessionName: string, projectName: string): string {
-  return buildSessionProjectContextBlock("已恢复会话", sessionName, projectName);
+export function buildUnarchiveSuccessText(sessionName: string, projectName: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return buildSessionProjectContextBlock(LL.projects.sessionRestored(), sessionName, projectName, language);
 }
 
-export function buildSessionRenamedText(name: string): string {
-  return formatHtmlField("当前会话已重命名为：", name);
+export function buildSessionRenamedText(name: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return formatHtmlField(LL.projects.sessionRenamed(), name);
 }
 
-export function buildProjectAliasRenamedText(name: string): string {
-  return formatHtmlField("当前项目别名已更新为：", name);
+export function buildProjectAliasRenamedText(name: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return formatHtmlField(LL.projects.projectAliasRenamed(), name);
 }
 
-export function buildProjectAliasClearedText(projectName: string): string {
-  return formatHtmlField("已清除项目别名：", projectName);
+export function buildProjectAliasClearedText(projectName: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return formatHtmlField(LL.projects.projectAliasCleared(), projectName);
 }
 
-export function buildProjectPinnedText(projectName: string): string {
-  return formatHtmlField("已收藏项目：", projectName);
+export function buildProjectPinnedText(projectName: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  return formatHtmlField(LL.projects.projectFavorited(), projectName);
 }
 
-export function buildModelPickerClosedText(session: SessionRow, modelState?: SessionModelDisplayState): string {
+export function buildModelPickerClosedText(session: SessionRow, modelState?: SessionModelDisplayState, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   const state = resolveModelDisplayState(session, modelState);
   return [
-    formatHtmlHeading("已关闭模型选择"),
-    formatHtmlField("当前配置：", formatModelReasoning(state.configuredModel, state.configuredReasoningEffort)),
-    formatHtmlField("当前生效：", formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort))
+    formatHtmlHeading(LL.model.modelPickerClosed()),
+    formatHtmlField(`${LL.common.configured()}：`, formatModelReasoning(state.configuredModel, state.configuredReasoningEffort, language)),
+    formatHtmlField(`${LL.common.effective()}：`, formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort, language))
   ].join("\n");
 }
 
@@ -634,32 +695,35 @@ export function buildRenameTargetPicker(options: {
   sessionId: string;
   projectName: string;
   hasProjectAlias: boolean;
+  language?: UiLanguage;
 }): {
   text: string;
   replyMarkup: TelegramInlineKeyboardMarkup;
 } {
+  const language = options.language ?? "zh";
+  const LL = getTranslator(language);
   const rows: TelegramInlineKeyboardMarkup["inline_keyboard"] = [
     [
-      { text: "重命名会话", callback_data: encodeRenameSessionCallback(options.sessionId) },
-      { text: "设置项目别名", callback_data: encodeRenameProjectCallback(options.sessionId) }
+      { text: LL.projects.renameSession(), callback_data: encodeRenameSessionCallback(options.sessionId) },
+      { text: LL.projects.setProjectAlias(), callback_data: encodeRenameProjectCallback(options.sessionId) }
     ]
   ];
 
   if (options.hasProjectAlias) {
-    rows.push([{ text: "清除项目别名", callback_data: encodeRenameProjectClearCallback(options.sessionId) }]);
+    rows.push([{ text: LL.projects.clearProjectAlias(), callback_data: encodeRenameProjectClearCallback(options.sessionId) }]);
   }
 
   return {
     text: [
-      "要修改哪个名称？",
-      formatHtmlField("当前项目：", options.projectName)
+      LL.model.editWhichName(),
+      formatHtmlField(LL.projects.currentProject(), options.projectName)
     ].join("\n"),
     replyMarkup: { inline_keyboard: rows }
   };
 }
 
-export function buildUnsupportedCommandText(): string {
-  return "这个命令还没开放。";
+export function buildUnsupportedCommandText(language: UiLanguage = "zh"): string {
+  return language === "en" ? "This command is not yet available." : "这个命令还没开放。";
 }
 
 function formatSessionState(session: SessionRow, language: UiLanguage = "zh"): string {
@@ -680,50 +744,17 @@ function formatSessionState(session: SessionRow, language: UiLanguage = "zh"): s
 }
 
 function formatSessionStateForCard(session: SessionRow, language: UiLanguage): string {
-  if (language !== "en") {
-    return formatSessionState(session);
-  }
-
-  switch (session.status) {
-    case "running":
-      return "Running";
-    case "interrupted":
-      return "Interrupted";
-    case "failed":
-      return "Failed";
-    case "idle":
-    default:
-      return "Idle";
-  }
+  const state = formatSessionState(session, language);
+  return language === "en" ? state.charAt(0).toUpperCase() + state.slice(1) : state;
 }
 
 function formatReasoningEffortLabelForCard(effort: ReasoningEffort, language: UiLanguage): string {
-  if (language !== "en") {
-    return formatReasoningEffortLabel(effort);
-  }
-
-  switch (effort) {
-    case "none":
-      return "off";
-    case "minimal":
-      return "minimal";
-    case "low":
-      return "low";
-    case "medium":
-      return "medium";
-    case "high":
-      return "high";
-    case "xhigh":
-      return "very high";
-  }
+  return formatReasoningEffortLabel(effort, language);
 }
 
 function formatSessionModelReasoningConfigForCard(state: SessionModelDisplayState, language: UiLanguage): string {
-  if (language !== "en") {
-    return `配置 ${formatModelReasoning(state.configuredModel, state.configuredReasoningEffort)} / 生效 ${formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort)}`;
-  }
-
-  return `configured ${formatModelReasoningForCard(state.configuredModel, state.configuredReasoningEffort, language)} / effective ${formatModelReasoningForCard(state.effectiveModel, state.effectiveReasoningEffort, language)}`;
+  const LL = getTranslator(language);
+  return `${LL.common.configured()} ${formatModelReasoning(state.configuredModel, state.configuredReasoningEffort, language)} / ${LL.common.effective()} ${formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort, language)}`;
 }
 
 function formatSessionFailureReason(reason: SessionRow["failureReason"], language: UiLanguage = "zh"): string {
@@ -761,18 +792,20 @@ function formatLastTurnSummary(session: SessionRow, language: UiLanguage = "zh")
   }
 }
 
-function buildDefaultModelButtonLabel(state: SessionModelDisplayState): string {
-  const marker = state.configuredModel === null && state.configuredReasoningEffort === null ? " [已配置]" : "";
-  return `清除模型/强度覆盖${marker}`;
+function buildDefaultModelButtonLabel(state: SessionModelDisplayState, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
+  const marker = state.configuredModel === null && state.configuredReasoningEffort === null ? ` [${LL.model.configuredMarker()}]` : "";
+  return `${LL.model.clearOverride()}${marker}`;
 }
 
-function buildModelButtonLabel(model: ModelPickerOption, state: SessionModelDisplayState): string {
+function buildModelButtonLabel(model: ModelPickerOption, state: SessionModelDisplayState, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   const markers: string[] = [];
   if (state.configuredModel === model.id) {
-    markers.push("已配置");
+    markers.push(LL.model.configuredMarker());
   }
   if (state.effectiveModel === model.id) {
-    markers.push("生效");
+    markers.push(LL.model.effectiveMarker());
   }
   const markerText = markers.length > 0 ? ` [${markers.join("/")}]` : "";
   return `${model.displayName}${markerText}`;
@@ -782,34 +815,38 @@ function buildDefaultEffortButtonLabel(
   defaultReasoningEffort: ReasoningEffort,
   state: SessionModelDisplayState,
   isConfiguredModel: boolean,
-  isEffectiveModel: boolean
+  isEffectiveModel: boolean,
+  language: UiLanguage = "zh"
 ): string {
+  const LL = getTranslator(language);
   const markers: string[] = [];
   if (isConfiguredModel && state.configuredReasoningEffort === null) {
-    markers.push("已配置");
+    markers.push(LL.model.configuredMarker());
   }
   if (isEffectiveModel && state.effectiveReasoningEffort === null) {
-    markers.push("生效");
+    markers.push(LL.model.effectiveMarker());
   }
   const markerText = markers.length > 0 ? ` [${markers.join("/")}]` : "";
-  return `默认（${formatReasoningEffortLabel(defaultReasoningEffort)}）${markerText}`;
+  return `${LL.common.default()}（${formatReasoningEffortLabel(defaultReasoningEffort, language)}）${markerText}`;
 }
 
 function buildReasoningEffortButtonLabel(
   effort: ReasoningEffort,
   state: SessionModelDisplayState,
   isConfiguredModel: boolean,
-  isEffectiveModel: boolean
+  isEffectiveModel: boolean,
+  language: UiLanguage = "zh"
 ): string {
+  const LL = getTranslator(language);
   const markers: string[] = [];
   if (isConfiguredModel && state.configuredReasoningEffort === effort) {
-    markers.push("已配置");
+    markers.push(LL.model.configuredMarker());
   }
   if (isEffectiveModel && state.effectiveReasoningEffort === effort) {
-    markers.push("生效");
+    markers.push(LL.model.effectiveMarker());
   }
   const markerText = markers.length > 0 ? ` [${markers.join("/")}]` : "";
-  return `${formatReasoningEffortLabel(effort)}${markerText}`;
+  return `${formatReasoningEffortLabel(effort, language)}${markerText}`;
 }
 
 function resolveModelDisplayState(
@@ -831,14 +868,13 @@ function resolveModelDisplayState(
 function formatModelReasoning(model: string | null, effort: ReasoningEffort | null, language: UiLanguage = "zh"): string {
   const LL = getTranslator(language);
   const modelLabel = model ?? LL.common.defaultModel();
-  const effortLabel = effort ? formatReasoningEffortLabelForCard(effort, language) : LL.common.default();
+  const effortLabel = effort ? formatReasoningEffortLabel(effort, language) : LL.common.default();
   return `${modelLabel} + ${effortLabel}`;
 }
 
 function formatModelReasoningForCard(model: string | null, effort: ReasoningEffort | null, language: UiLanguage): string {
-  const modelLabel = model ?? (language === "en" ? "Default model" : "默认模型");
-  const effortLabel = effort
-    ? formatReasoningEffortLabelForCard(effort, language)
-    : language === "en" ? "default" : "默认";
+  const LL = getTranslator(language);
+  const modelLabel = model ?? LL.common.defaultModel();
+  const effortLabel = effort ? formatReasoningEffortLabel(effort, language) : LL.common.default();
   return `${modelLabel} + ${effortLabel}`;
 }

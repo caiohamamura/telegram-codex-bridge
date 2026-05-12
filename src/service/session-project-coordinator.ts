@@ -300,7 +300,7 @@ export class SessionProjectCoordinator {
     };
     this.pickerStates.set(chatId, pickerState);
 
-    const rendered = buildProjectPickerMessage(picker);
+    const rendered = buildProjectPickerMessage(picker, this.deps.getUiLanguage());
     await this.recreateInteractivePickerMessage(chatId, pickerState, {
       text: rendered.text,
       replyMarkup: rendered.replyMarkup
@@ -424,7 +424,7 @@ export class SessionProjectCoordinator {
 
     pickerState.inBrowseRootPicker = false;
     pickerState.awaitingManualProjectPath = false;
-    const rendered = buildProjectPickerMessage(pickerState.picker);
+    const rendered = buildProjectPickerMessage(pickerState.picker, this.deps.getUiLanguage());
     await this.replaceInteractivePickerMessage(chatId, pickerState, {
       text: rendered.text,
       replyMarkup: rendered.replyMarkup
@@ -528,7 +528,7 @@ export class SessionProjectCoordinator {
 
     pickerState.inBrowseRootPicker = false;
     pickerState.awaitingManualProjectPath = false;
-    const rendered = buildProjectPickerMessage(pickerState.picker);
+    const rendered = buildProjectPickerMessage(pickerState.picker, this.deps.getUiLanguage());
     await this.recreateInteractivePickerMessage(chatId, pickerState, {
       text: rendered.text,
       replyMarkup: rendered.replyMarkup

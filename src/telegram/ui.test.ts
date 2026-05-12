@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import type { InspectSnapshot } from "../activity/types.js";
-import type { ProjectCandidate, ReadinessSnapshot, SessionRow } from "../types.js";
+import type { ProjectCandidate, ProjectPickerResult, ReadinessSnapshot, SessionRow } from "../types.js";
 import {
   buildArchiveSuccessText,
   buildInteractionApprovalCard,
@@ -580,7 +580,7 @@ test("session management replies render explicit session and project context", (
 });
 
 test("buildProjectPickerMessage renders grouped candidates with path hints", () => {
-  const rendered = buildProjectPickerMessage({
+  const picker: ProjectPickerResult = {
     title: "选择要新建会话的项目",
     emptyText: "还没有最近项目，请浏览目录或手动输入路径。",
     noticeLines: [],
@@ -618,7 +618,8 @@ test("buildProjectPickerMessage renders grouped candidates with path hints", () 
         fromScan: false
       })]
     ])
-  });
+  };
+  const rendered = buildProjectPickerMessage(picker);
 
   assert.match(rendered.text, /^选择要新建会话的项目/um);
   assert.match(rendered.text, /还没有最近项目，请浏览目录或手动输入路径。/u);
@@ -628,6 +629,15 @@ test("buildProjectPickerMessage renders grouped candidates with path hints", () 
   assert.match(rendered.text, /最近 · 有历史会话/u);
   assert.deepEqual(rendered.replyMarkup.inline_keyboard[0]?.map((button) => button.text), ["1"]);
   assert.equal(rendered.replyMarkup.inline_keyboard.at(-1)?.[0]?.text, "浏览目录");
+
+  const english = buildProjectPickerMessage(picker, "en");
+  assert.match(english.text, /^Choose a project for the new session/um);
+  assert.match(english.text, /No recent projects yet\. Browse a directory or enter a path manually\./u);
+  assert.match(english.text, /Pinned/u);
+  assert.match(english.text, /Recent · Has session history/u);
+  assert.equal(english.replyMarkup.inline_keyboard.at(-1)?.[0]?.text, "Browse directory");
+  assert.equal(english.replyMarkup.inline_keyboard.at(-1)?.[1]?.text, "Enter path");
+  assert.doesNotMatch(english.text, /选择|最近使用|已收藏|有历史会话/u);
 });
 
 test("project browser directory message renders entries and browse callbacks", () => {

@@ -1,4 +1,5 @@
-import type { ReasoningEffort, SessionRow } from "../types.js";
+import type { ReasoningEffort, SessionRow, UiLanguage } from "../types.js";
+import { getTranslator } from "../i18n/index.js";
 
 export function escapeHtml(text: string): string {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -20,47 +21,51 @@ export function chunkButtons<T>(values: T[], size: number): T[][] {
   return chunks;
 }
 
-export function formatRelativeTime(isoTime: string): string {
+export function formatRelativeTime(isoTime: string, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   const diffMs = Math.max(0, Date.now() - Date.parse(isoTime));
   const minutes = Math.floor(diffMs / 60_000);
   if (minutes < 1) {
-    return "刚刚";
+    return LL.shared.justNow();
   }
 
   if (minutes < 60) {
-    return `${minutes}分钟前`;
+    return `${minutes}${LL.shared.minutesAgo()}`;
   }
 
   const hours = Math.floor(minutes / 60);
   if (hours < 24) {
-    return `${hours}小时前`;
+    return `${hours}${LL.shared.hoursAgo()}`;
   }
 
   const days = Math.floor(hours / 24);
-  return `${days}天前`;
+  return `${days}${LL.shared.daysAgo()}`;
 }
 
-export function formatReasoningEffortLabel(effort: ReasoningEffort): string {
+export function formatReasoningEffortLabel(effort: ReasoningEffort, language: UiLanguage = "zh"): string {
+  const LL = getTranslator(language);
   switch (effort) {
     case "none":
-      return "关闭";
+      return LL.shared.effortNone();
     case "minimal":
-      return "极省";
+      return LL.shared.effortMinimal();
     case "low":
-      return "低";
+      return LL.shared.effortLow();
     case "medium":
-      return "中";
+      return LL.shared.effortMedium();
     case "high":
-      return "高";
+      return LL.shared.effortHigh();
     case "xhigh":
-      return "极高";
+      return LL.shared.effortXhigh();
   }
 }
 
 export function formatSessionModelReasoningConfig(
-  session: Pick<SessionRow, "selectedModel" | "selectedReasoningEffort">
+  session: Pick<SessionRow, "selectedModel" | "selectedReasoningEffort">,
+  language: UiLanguage = "zh"
 ): string {
-  const modelLabel = session.selectedModel ?? "默认模型";
-  const effortLabel = session.selectedReasoningEffort ? formatReasoningEffortLabel(session.selectedReasoningEffort) : "默认";
+  const LL = getTranslator(language);
+  const modelLabel = session.selectedModel ?? LL.common.defaultModel();
+  const effortLabel = session.selectedReasoningEffort ? formatReasoningEffortLabel(session.selectedReasoningEffort, language) : LL.common.default();
   return `${modelLabel} + ${effortLabel}`;
 }
