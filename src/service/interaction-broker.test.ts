@@ -66,6 +66,7 @@ async function createBrokerContext(options: {
   const broker = new InteractionBroker({
     getStore: () => store,
     getAppServer: () => options.appServer as never,
+    getUiLanguage: () => "zh",
     logger: testLogger,
     preferBridgeCommandButtons: false,
     safeSendMessage: async () => true,

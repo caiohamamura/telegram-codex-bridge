@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { lstat, open, readdir, realpath } from "node:fs/promises";
 import { basename, extname, isAbsolute, relative, resolve, sep } from "node:path";
 
+import { getTranslator } from "../i18n/index.js";
 import type { BridgeStateStore } from "../state/store.js";
 import type { TelegramInlineKeyboardMarkup, TelegramMessage } from "../telegram/api.js";
 import {
@@ -107,40 +108,6 @@ interface ProjectBrowserCoordinatorDeps {
   syncCurrentSessionCard?: (chatId: string, reason: string) => Promise<void>;
 }
 
-function browserCopy(language: UiLanguage) {
-  return language === "en"
-    ? {
-        noSession: "There is no active session. Use /new or /use first.",
-        unavailableProject: "The current project directory is unavailable. Re-select the project and try again.",
-        unavailableRoot: "This browse root is unavailable. Send /new and try again.",
-        expired: "This button has expired. Send /browse again.",
-        expiredPreSession: "This button has expired. Send /new and browse again.",
-        updateFailed: "Unable to update this browser message. Send /browse again.",
-        symlinkUnsupported: "Phase 1 does not support browsing symlinks.",
-        imagePreviewSent: "Image preview sent.",
-        imagePreviewFailed: "Unable to send this image preview right now.",
-        fileInfoFailed: "Unable to inspect this file right now.",
-        closeFailed: "Unable to close this browser message right now.",
-        createSessionSuccessReason: "session_created",
-        createSessionUnavailable: "This directory is unavailable. Re-open /new and try again."
-      }
-    : {
-        noSession: "当前没有活动会话，请先发送 /new 或 /use 进入项目。",
-        unavailableProject: "当前项目目录不可用，请重新选择项目后再试。",
-        unavailableRoot: "当前浏览根目录不可用，请重新发送 /new 后重试。",
-        expired: "这个按钮已过期，请重新发送 /browse。",
-        expiredPreSession: "这个按钮已过期，请重新发送 /new 后再浏览。",
-        updateFailed: "当前无法更新这个浏览消息，请重新发送 /browse。",
-        symlinkUnsupported: "Phase 1 暂不支持浏览符号链接。",
-        imagePreviewSent: "已发送图片预览。",
-        imagePreviewFailed: "暂时无法发送这张图片预览，请稍后重试。",
-        fileInfoFailed: "暂时无法读取这个文件，请稍后重试。",
-        closeFailed: "当前无法关闭这个浏览消息。",
-        createSessionSuccessReason: "session_created",
-        createSessionUnavailable: "当前目录不可用，请重新发送 /new 后重试。"
-      };
-}
-
 function projectDisplayName(session: Pick<SessionRow, "projectName" | "projectAlias">): string {
   return session.projectAlias?.trim() || session.projectName;
 }
@@ -227,15 +194,15 @@ export class ProjectBrowserCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     const language = this.deps.getUiLanguage();
-    const copy = browserCopy(language);
+    const LL = getTranslator(language);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, copy.noSession);
+      await this.deps.safeSendMessage(chatId, LL.errors.browserNoSession());
       return;
     }
 
     const projectRoot = await this.resolveProjectRoot(activeSession.projectPath);
     if (!projectRoot) {
-      await this.deps.safeSendMessage(chatId, copy.unavailableProject);
+      await this.deps.safeSendMessage(chatId, LL.errors.browserUnavailableProject());
       return;
     }
 
@@ -261,7 +228,7 @@ export class ProjectBrowserCoordinator {
 
     const rendered = await this.renderDirectoryState(state, projectRoot, 0);
     if (!rendered) {
-      await this.deps.safeSendMessage(chatId, copy.unavailableProject);
+      await this.deps.safeSendMessage(chatId, LL.errors.browserUnavailableProject());
       return;
     }
 
@@ -276,10 +243,10 @@ export class ProjectBrowserCoordinator {
 
   async openPreSessionBrowse(chatId: string, sourceMessageId: number, rootPath: string): Promise<boolean> {
     const language = this.deps.getUiLanguage();
-    const copy = browserCopy(language);
+    const LL = getTranslator(language);
     const projectRoot = await this.resolveProjectRoot(rootPath);
     if (!projectRoot) {
-      await this.deps.safeSendMessage(chatId, copy.unavailableRoot);
+      await this.deps.safeSendMessage(chatId, LL.errors.browserUnavailableRoot());
       return false;
     }
 
@@ -305,7 +272,7 @@ export class ProjectBrowserCoordinator {
 
     const rendered = await this.renderDirectoryState(state, projectRoot, 0);
     if (!rendered) {
-      await this.deps.safeSendMessage(chatId, copy.unavailableRoot);
+      await this.deps.safeSendMessage(chatId, LL.errors.browserUnavailableRoot());
       return false;
     }
 
@@ -342,11 +309,11 @@ export class ProjectBrowserCoordinator {
   ): Promise<void> {
     const state = this.getValidatedState(parsed.token, chatId, messageId);
     const language = this.deps.getUiLanguage();
-    const copy = browserCopy(language);
+    const LL = getTranslator(language);
     if (!state) {
       await this.deps.safeAnswerCallbackQuery(
         callbackQueryId,
-        parsed.kind.startsWith("browse_") ? copy.expired : copy.expiredPreSession
+        parsed.kind.startsWith("browse_") ? LL.errors.browserExpired() : LL.errors.browserExpiredPreSession()
       );
       return;
     }
@@ -381,7 +348,7 @@ export class ProjectBrowserCoordinator {
           await this.deps.safeAnswerCallbackQuery(callbackQueryId);
           return;
         }
-        await this.deps.safeAnswerCallbackQuery(callbackQueryId, copy.closeFailed);
+        await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.browserCloseFailed());
         return;
       case "browse_use_current_dir":
         await this.deps.safeAnswerCallbackQuery(callbackQueryId);
@@ -424,20 +391,20 @@ export class ProjectBrowserCoordinator {
     entryIndex: number,
     language: UiLanguage
   ): Promise<void> {
-    const copy = browserCopy(language);
+    const LL = getTranslator(language);
     if (state.view.kind !== "directory") {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, copy.expired);
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.browserExpired());
       return;
     }
 
     const entry = state.view.entries[entryIndex];
     if (!entry) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, copy.expired);
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.browserExpired());
       return;
     }
 
     if (entry.kind === "symlink") {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, copy.symlinkUnsupported);
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.browserSymlinkUnsupported());
       return;
     }
 
@@ -449,7 +416,7 @@ export class ProjectBrowserCoordinator {
 
     const preview = await this.readFilePreview(entry.absolutePath);
     if (!preview) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, copy.fileInfoFailed);
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.browserFileInfoFailed());
       return;
     }
 
@@ -464,7 +431,7 @@ export class ProjectBrowserCoordinator {
         }),
         parseMode: "HTML"
       });
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, sent ? copy.imagePreviewSent : copy.imagePreviewFailed);
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, sent ? LL.success.imagePreviewSent() : LL.errors.browserImagePreviewFailed());
       return;
     }
 
@@ -480,7 +447,7 @@ export class ProjectBrowserCoordinator {
           modifiedAtLabel: entry.modifiedAtLabel
         })
       );
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, sent ? undefined : copy.fileInfoFailed);
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, sent ? undefined : LL.errors.browserFileInfoFailed());
       return;
     }
 
@@ -586,14 +553,15 @@ export class ProjectBrowserCoordinator {
     const createPath = state.pendingCreateDirectoryPath;
     state.pendingCreateDirectoryPath = null;
     state.pendingCreateDirectoryPage = null;
+    const LL = getTranslator(language);
     if (!isPathWithinRoot(state.projectRoot, createPath)) {
-      await this.deps.safeSendMessage(state.chatId, browserCopy(language).createSessionUnavailable);
+      await this.deps.safeSendMessage(state.chatId, LL.errors.browserCreateSessionUnavailable());
       return;
     }
 
     const resolved = await this.resolveProjectRoot(createPath);
     if (!resolved) {
-      await this.deps.safeSendMessage(state.chatId, browserCopy(language).createSessionUnavailable);
+      await this.deps.safeSendMessage(state.chatId, LL.errors.browserCreateSessionUnavailable());
       return;
     }
 
@@ -618,7 +586,7 @@ export class ProjectBrowserCoordinator {
       buildSessionCreatedText(displayName, resolved)
     );
     this.browseStates.delete(state.token);
-    await this.deps.syncCurrentSessionCard?.(state.chatId, browserCopy(language).createSessionSuccessReason);
+    await this.deps.syncCurrentSessionCard?.(state.chatId, "session_created");
   }
 
   private async handleDirectoryOpen(
@@ -627,10 +595,11 @@ export class ProjectBrowserCoordinator {
     page: number,
     language: UiLanguage
   ): Promise<void> {
+    const LL = getTranslator(language);
     const rendered = await this.renderDirectoryState(state, directoryPath, page);
     if (!rendered) {
       this.browseStates.delete(state.token);
-      await this.deps.safeSendMessage(state.chatId, browserCopy(language).updateFailed);
+      await this.deps.safeSendMessage(state.chatId, LL.errors.browserUpdateFailed());
       return;
     }
 
@@ -717,13 +686,14 @@ export class ProjectBrowserCoordinator {
     replyMarkup: TelegramInlineKeyboardMarkup,
     language: UiLanguage
   ): Promise<void> {
+    const LL = getTranslator(language);
     const result = await this.deps.safeEditHtmlMessageText(state.chatId, state.messageId, text, replyMarkup);
     if (isTelegramEditCommitted(result)) {
       return;
     }
 
     this.browseStates.delete(state.token);
-    await this.deps.safeSendMessage(state.chatId, browserCopy(language).updateFailed);
+    await this.deps.safeSendMessage(state.chatId, LL.errors.browserUpdateFailed());
   }
 
   private async consumeBrowserSurface(chatId: string, messageId: number, html: string): Promise<void> {

@@ -119,6 +119,7 @@ async function createCoordinatorContext(options: {
 
   const coordinator = new CodexCommandCoordinator({
     getStore: () => store,
+    getUiLanguage: () => "zh",
     ensureAppServerAvailable: async () => appServer as never,
     startFreshThreadForClear: async (session) => {
       const startThread = (appServer as any).startThread;

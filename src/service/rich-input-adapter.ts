@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { access, mkdir, readFile, readdir, rm, stat } from "node:fs/promises";
 import { basename, extname, join, resolve } from "node:path";
 
+import { getTranslator } from "../i18n/index.js";
 import type { CodexAppServerClient, UserInput } from "../codex/app-server.js";
 import type { BridgeConfig } from "../config.js";
 import type { BridgeCommandActionView } from "../core/interaction-model/bridge-actions.js";
@@ -27,7 +28,6 @@ const VOICE_PCM_BYTES_PER_SAMPLE = 2;
 const VOICE_REALTIME_CHUNK_BYTES = 32_000;
 const VOICE_REALTIME_WAIT_TIMEOUT_MS = 30_000;
 const VOICE_REALTIME_POLL_INTERVAL_MS = 1_000;
-const VOICE_REALTIME_TRANSCRIPTION_PROMPT = "请逐字转写收到的语音，只返回转写文本，不要解释。";
 const ATTACHMENT_CONTENT_CHAR_LIMIT = 12_000;
 const TEXTUAL_ATTACHMENT_EXTENSIONS = new Set([
   ".txt", ".md", ".markdown", ".json", ".jsonl", ".yaml", ".yml", ".xml", ".csv", ".ts", ".tsx", ".js", ".jsx",
@@ -175,7 +175,8 @@ export class RichInputAdapter {
 
     this.pendingRichInputComposers.delete(chatId);
     this.pendingAutoAttachByChatId.delete(chatId);
-    await this.deps.safeSendMessage(chatId, "已取消待发送的结构化输入。");
+    const LL = getTranslator(this.deps.getUiLanguage());
+    await this.deps.safeSendMessage(chatId, LL.success.structuredInputCancelled());
     return true;
   }
 
@@ -186,16 +187,17 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || activeSession.sessionId !== pending.sessionId) {
       this.pendingRichInputComposers.delete(chatId);
-      await this.deps.safeSendMessage(chatId, "当前会话已经变化，请重新发送结构化输入。");
+      await this.deps.safeSendMessage(chatId, LL.errors.sessionChanged());
       return;
     }
 
     const prompt = text.trim();
     if (!prompt) {
-      await this.deps.safeSendMessage(chatId, `请继续发送要和${pending.promptLabel}一起交给 Codex 的说明。`);
+      await this.deps.safeSendMessage(chatId, LL.prompts.continueStructuredInputPrefix() + pending.promptLabel + LL.prompts.continueStructuredInputSuffix());
       return;
     }
 
@@ -212,28 +214,29 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     const parsed = splitStructuredInputCommand(args);
     if (!parsed.value) {
-      await this.deps.safeSendMessage(chatId, "用法：/local_image <图片路径> :: 任务说明");
+      await this.deps.safeSendMessage(chatId, LL.errors.localImageUsage());
       return;
     }
 
     const imagePath = resolve(activeSession.projectPath, parsed.value);
     if (!await isReadableImagePath(imagePath)) {
-      await this.deps.safeSendMessage(chatId, "这个本地图片路径不可用，请确认文件存在且是常见图片格式。");
+      await this.deps.safeSendMessage(chatId, LL.errors.localImageInvalid());
       return;
     }
 
     await this.submitOrQueueRichInput(chatId, activeSession, [{
       type: "localImage",
       path: imagePath
-    }], parsed.prompt, `本地图片：${basename(imagePath)}`);
+    }], parsed.prompt, LL.labels.localImagePrefix() + basename(imagePath));
   }
 
   async handleMention(chatId: string, args: string): Promise<void> {
@@ -242,15 +245,16 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     const parsed = splitStructuredInputCommand(args);
     if (!parsed.value) {
-      await this.deps.safeSendMessage(chatId, "用法：/mention <path> :: 任务说明");
+      await this.deps.safeSendMessage(chatId, LL.errors.mentionUsage());
       return;
     }
 
@@ -259,7 +263,7 @@ export class RichInputAdapter {
       type: "mention",
       name,
       path
-    }], parsed.prompt, `引用：${name}`);
+    }], parsed.prompt, LL.labels.referencePrefix() + name);
   }
 
   async handleAttach(chatId: string, args: string): Promise<void> {
@@ -268,31 +272,32 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     const parsed = splitStructuredInputCommand(args);
     if (!parsed.value) {
-      await this.deps.safeSendMessage(chatId, "用法：/attach <附件ID> :: 任务说明");
+      await this.deps.safeSendMessage(chatId, LL.errors.attachUsage());
       return;
     }
 
     const attachment = this.findAttachment(activeSession.sessionId, parsed.value);
     if (!attachment) {
-      await this.deps.safeSendMessage(chatId, `找不到附件：${parsed.value}`);
+      await this.deps.safeSendMessage(chatId, LL.errors.attachmentNotFoundPrefix() + parsed.value);
       return;
     }
 
     this.pendingAutoAttachByChatId.delete(chatId);
     const attachmentInputs = await this.buildAttachmentInputs(attachment);
     if (attachmentInputs.length === 0) {
-      await this.deps.safeSendMessage(chatId, `当前无法把附件 ${attachment.filename} 转成 Codex 可读输入。`);
+      await this.deps.safeSendMessage(chatId, LL.errors.attachmentConversionFailedPrefix() + attachment.filename + LL.errors.attachmentConversionFailedSuffix());
       return;
     }
-    await this.submitOrQueueRichInput(chatId, activeSession, attachmentInputs, parsed.prompt, `附件：${attachment.filename}`);
+    await this.submitOrQueueRichInput(chatId, activeSession, attachmentInputs, parsed.prompt, LL.labels.attachmentPrefix() + attachment.filename);
   }
 
   async handleAutoAttachText(chatId: string, text: string): Promise<boolean> {
@@ -323,7 +328,8 @@ export class RichInputAdapter {
     const attachmentInputs = await this.buildAttachmentInputsForAttachments(attachments);
     if (attachmentInputs.length === 0) {
       this.pendingAutoAttachByChatId.delete(chatId);
-      await this.deps.safeSendMessage(chatId, "最近附件暂时无法自动转成 Codex 可读输入，请改用支持文本提取的文件，或稍后再试。");
+      const LL = getTranslator(this.deps.getUiLanguage());
+      await this.deps.safeSendMessage(chatId, LL.errors.attachmentAutoConversionFailed());
       return false;
     }
 
@@ -344,14 +350,15 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     if (!this.deps.config.voiceInputEnabled) {
-      await this.deps.safeSendMessage(chatId, "未启用语音输入。");
+      await this.deps.safeSendMessage(chatId, LL.errors.voiceNotEnabled());
       return;
     }
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "请先发送 /new 选择项目。");
+      await this.deps.safeSendMessage(chatId, LL.errors.selectProjectFirst());
       return;
     }
 
@@ -369,8 +376,8 @@ export class RichInputAdapter {
     await this.deps.safeSendMessage(
       chatId,
       this.pendingVoiceTaskCount > 1
-        ? `已收到语音，正在排队转写。前方还有 ${this.pendingVoiceTaskCount - 1} 条语音。`
-        : "已收到语音，正在转写。"
+        ? LL.success.voiceReceivedPrefix() + LL.success.voiceQueuedPrefix() + (this.pendingVoiceTaskCount - 1) + LL.success.voiceQueuedSuffix()
+        : LL.success.voiceReceivedPrefix() + LL.success.voiceTranscribing()
     );
   }
 
@@ -381,9 +388,10 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "请先发送 /new 选择项目。");
+      await this.deps.safeSendMessage(chatId, LL.errors.selectProjectFirst());
       return;
     }
 
@@ -395,13 +403,13 @@ export class RichInputAdapter {
     try {
       const file = await api.getFile(photo.file_id);
       if (!file.file_path) {
-        await this.deps.safeSendMessage(chatId, "暂时无法读取这张图片，请稍后重试。");
+        await this.deps.safeSendMessage(chatId, LL.errors.imageReadFailed());
         return;
       }
 
       const localImagePath = await this.cacheTelegramPhoto(message.message_id, photo.file_id, file.file_path, file);
       if (!localImagePath) {
-        await this.deps.safeSendMessage(chatId, "暂时无法读取这张图片，请稍后重试。");
+        await this.deps.safeSendMessage(chatId, LL.errors.imageReadFailed());
         return;
       }
 
@@ -410,10 +418,10 @@ export class RichInputAdapter {
         activeSession,
         [{ type: "localImage", path: localImagePath }],
         (message.caption ?? "").trim() || null,
-        "图片"
+        LL.labels.image()
       );
     } catch {
-      await this.deps.safeSendMessage(chatId, "暂时无法读取这张图片，请稍后重试。");
+      await this.deps.safeSendMessage(chatId, LL.errors.imageReadFailed());
     }
   }
 
@@ -423,9 +431,10 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "请先发送 /new 选择项目。");
+      await this.deps.safeSendMessage(chatId, LL.errors.selectProjectFirst());
       return;
     }
 
@@ -472,7 +481,7 @@ export class RichInputAdapter {
         activeSession,
         imageInputs,
         event.text,
-        imageInputs.length > 1 ? `${imageInputs.length} 张图片` : "图片"
+        imageInputs.length > 1 ? `${imageInputs.length}${LL.labels.multipleImagesSuffix()}` : LL.labels.image()
       );
       return;
     }
@@ -504,10 +513,12 @@ export class RichInputAdapter {
         return;
       }
 
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请等待完成或发送 /interrupt。", this.buildBusyTurnReplyMarkup());
+      const LL = getTranslator(this.deps.getUiLanguage());
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusyInterrupt(), this.buildBusyTurnReplyMarkup());
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     this.pendingRichInputComposers.set(chatId, {
       sessionId: session.sessionId,
       inputs,
@@ -515,7 +526,7 @@ export class RichInputAdapter {
     });
     await this.deps.safeSendMessage(
       chatId,
-      `已记录${promptLabel}，请继续发送任务说明，或发送 /cancel 取消。`,
+      LL.hints.recordedContinueOrCancelPrefix() + promptLabel + LL.hints.recordedContinueOrCancelSuffix(),
       this.buildCancelReplyMarkup()
     );
   }
@@ -539,9 +550,10 @@ export class RichInputAdapter {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = store.getSessionById(task.sessionId);
     if (!session || session.chatId !== task.chatId || session.archived) {
-      await this.deps.safeSendMessage(task.chatId, "这条语音对应的会话已不可用，请重新选择会话后再试。");
+      await this.deps.safeSendMessage(task.chatId, LL.errors.voiceSessionUnavailable());
       return;
     }
 
@@ -549,13 +561,13 @@ export class RichInputAdapter {
     try {
       const file = await api.getFile(task.telegramFileId);
       if (!file.file_path) {
-        await this.deps.safeSendMessage(task.chatId, "暂时无法读取这段语音，请稍后重试。");
+        await this.deps.safeSendMessage(task.chatId, LL.errors.voiceReadFailed());
         return;
       }
 
       localVoicePath = await this.cacheTelegramVoice(task.messageId, task.telegramFileId, file.file_path, file);
       if (!localVoicePath) {
-        await this.deps.safeSendMessage(task.chatId, "暂时无法读取这段语音，请稍后重试。");
+        await this.deps.safeSendMessage(task.chatId, LL.errors.voiceReadFailed());
         return;
       }
 
@@ -569,7 +581,7 @@ export class RichInputAdapter {
             sessionId: session.sessionId,
             error: `${error}`
           });
-          await this.deps.safeSendMessage(task.chatId, "OpenAI 语音转写失败，正在尝试 realtime 兜底。");
+          await this.deps.safeSendMessage(task.chatId, LL.errors.voiceTranscriptionFailedRealtimeFallback());
         }
       }
 
@@ -582,18 +594,18 @@ export class RichInputAdapter {
             sessionId: session.sessionId,
             error: `${error}`
           });
-          await this.deps.safeSendMessage(task.chatId, `语音输入失败：${normalizeWhitespace(`${error}`)}`);
+          await this.deps.safeSendMessage(task.chatId, LL.errors.voiceInputFailedPrefix() + normalizeWhitespace(`${error}`));
           return;
         }
       }
 
       const currentSession = store.getSessionById(task.sessionId);
       if (!currentSession || currentSession.chatId !== task.chatId || currentSession.archived) {
-        await this.deps.safeSendMessage(task.chatId, "语音已转写，但对应会话已不可用，请重新发送。");
+        await this.deps.safeSendMessage(task.chatId, LL.errors.voiceTranscribedSessionUnavailable());
         return;
       }
 
-      await this.deps.safeSendMessage(task.chatId, `语音转写：${transcription.transcript}`);
+      await this.deps.safeSendMessage(task.chatId, LL.labels.voiceTranscriptionPrefix() + transcription.transcript);
       await this.submitVoiceTranscript(task.chatId, currentSession, transcription.transcript);
     } catch (error) {
       await this.deps.logger.warn("voice message handling failed", {
@@ -601,7 +613,7 @@ export class RichInputAdapter {
         sessionId: session.sessionId,
         error: `${error}`
       });
-      await this.deps.safeSendMessage(task.chatId, "暂时无法处理这段语音，请稍后重试。");
+      await this.deps.safeSendMessage(task.chatId, LL.errors.voiceProcessingFailed());
     } finally {
       if (localVoicePath) {
         await rm(localVoicePath, { force: true }).catch(() => {});
@@ -629,7 +641,8 @@ export class RichInputAdapter {
             turnId: steerAvailability.turnId,
             error: `${error}`
           });
-          await this.deps.safeSendMessage(chatId, "Codex 服务暂时不可用，请稍后重试。");
+          const LL = getTranslator(this.deps.getUiLanguage());
+          await this.deps.safeSendMessage(chatId, LL.errors.codexUnavailable());
         }
         return;
       }
@@ -639,7 +652,8 @@ export class RichInputAdapter {
         return;
       }
 
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请等待完成或发送 /interrupt。", this.buildBusyTurnReplyMarkup());
+      const LL = getTranslator(this.deps.getUiLanguage());
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusyInterrupt(), this.buildBusyTurnReplyMarkup());
       return;
     }
 
@@ -669,7 +683,8 @@ export class RichInputAdapter {
             turnId: steerAvailability.turnId,
             error: `${error}`
           });
-          await this.deps.safeSendMessage(chatId, "Codex 服务暂时不可用，请稍后重试。");
+          const LL = getTranslator(this.deps.getUiLanguage());
+          await this.deps.safeSendMessage(chatId, LL.errors.codexUnavailable());
           return false;
         }
         return true;
@@ -680,7 +695,8 @@ export class RichInputAdapter {
         return false;
       }
 
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请等待完成或发送 /interrupt。", this.buildBusyTurnReplyMarkup());
+      const LL = getTranslator(this.deps.getUiLanguage());
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusyInterrupt(), this.buildBusyTurnReplyMarkup());
       return false;
     }
 
@@ -708,7 +724,8 @@ export class RichInputAdapter {
             turnId: steerAvailability.turnId,
             error: `${error}`
           });
-          await this.deps.safeSendMessage(chatId, "Codex 服务暂时不可用，请稍后重试。");
+          const LL = getTranslator(this.deps.getUiLanguage());
+          await this.deps.safeSendMessage(chatId, LL.errors.codexUnavailable());
           return false;
         }
         return true;
@@ -719,7 +736,8 @@ export class RichInputAdapter {
         return false;
       }
 
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请等待完成或发送 /interrupt。", this.buildBusyTurnReplyMarkup());
+      const LL = getTranslator(this.deps.getUiLanguage());
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusyInterrupt(), this.buildBusyTurnReplyMarkup());
       return false;
     }
 
@@ -765,13 +783,14 @@ export class RichInputAdapter {
     session: SessionRow,
     localVoicePath: string
   ): Promise<VoiceTranscriptionResult> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const realtimeModelId = await this.getRealtimeVoiceModelId();
     if (!realtimeModelId) {
-      throw new Error("当前 Codex 模型不支持 realtime 音频输入。");
+      throw new Error(LL.errors.realtimeAudioNotSupported());
     }
 
     if (!await commandExists(this.deps.config.voiceFfmpegBin)) {
-      throw new Error(`系统里找不到 ffmpeg：${this.deps.config.voiceFfmpegBin}`);
+      throw new Error(LL.errors.ffmpegNotFoundPrefix() + this.deps.config.voiceFfmpegBin);
     }
 
     const appServer = await this.deps.ensureAppServerAvailable();
@@ -794,7 +813,7 @@ export class RichInputAdapter {
 
       await appServer.startThreadRealtime({
         threadId: tempThreadId,
-        prompt: VOICE_REALTIME_TRANSCRIPTION_PROMPT
+        prompt: LL.labels.voiceRealtimeTranscriptionPrompt()
       });
 
       for (let offset = 0; offset < pcmBytes.length; offset += VOICE_REALTIME_CHUNK_BYTES) {
@@ -997,14 +1016,15 @@ export class RichInputAdapter {
       sessionId,
       attachmentIds: registered.map((item) => item.attachmentId)
     });
+    const LL = getTranslator(this.deps.getUiLanguage());
     const summary = registered
       .map((item) => `- ${item.filename} (${item.attachmentId})`)
       .join("\n");
     await this.deps.safeSendMessage(
       chatId,
       registered.length === 1
-        ? `已接收文件附件：\n${summary}\n下一条消息会自动带上最近附件；也可用 /attach <附件ID> :: 任务说明；发送 /cancel 可取消。`
-        : `已接收 ${registered.length} 个文件附件：\n${summary}\n下一条消息会自动带上最近附件；也可用 /attach <附件ID> :: 任务说明；发送 /cancel 可取消。`,
+        ? LL.labels.attachmentReceivedSinglePrefix() + summary + LL.labels.attachmentReceivedSingleSuffix()
+        : LL.labels.attachmentReceivedMultiplePrefix() + registered.length + LL.labels.attachmentReceivedMultipleMiddle() + summary + LL.labels.attachmentReceivedMultipleSuffix(),
       this.buildCancelReplyMarkup()
     );
     return registered;
@@ -1035,12 +1055,13 @@ export class RichInputAdapter {
   }
 
   private async sendUnresolvedMediaNotice(chatId: string, assets: ResolvedMediaAsset[]): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     if (
       assets.length === 1
       && assets[0]?.descriptor.kind === "image"
       && assets[0].descriptor.platformRef?.platform === "telegram"
     ) {
-      await this.deps.safeSendMessage(chatId, "暂时无法读取这张图片，请稍后重试。");
+      await this.deps.safeSendMessage(chatId, LL.errors.imageReadFailed());
       return;
     }
 
@@ -1048,7 +1069,7 @@ export class RichInputAdapter {
       const name = asset.descriptor.filename ?? asset.descriptor.kind;
       return `- ${name}: ${asset.failureReason ?? "unknown"}`;
     }).join("\n");
-    await this.deps.safeSendMessage(chatId, `以下附件未能完成解析：\n${lines}`);
+    await this.deps.safeSendMessage(chatId, LL.errors.attachmentsParseFailedPrefix() + lines);
   }
 
   private findAttachment(sessionId: string, attachmentId: string): RegisteredAttachment | null {
@@ -1090,10 +1111,11 @@ export class RichInputAdapter {
       return null;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const truncated = truncateText(normalized, ATTACHMENT_CONTENT_CHAR_LIMIT);
     return truncated === normalized
-      ? `以下是附件《${attachment.filename}》的提取内容：\n\n${truncated}`
-      : `以下是附件《${attachment.filename}》的提取内容（已截断）：\n\n${truncated}`;
+      ? LL.labels.attachmentExtractContentPrefix() + attachment.filename + LL.labels.attachmentExtractContentMiddle() + truncated
+      : LL.labels.attachmentExtractContentTruncatedPrefix() + attachment.filename + LL.labels.attachmentExtractContentTruncatedMiddle() + truncated;
   }
 
   private async extractPdfText(filePath: string): Promise<string | null> {

@@ -13,6 +13,7 @@ import {
   type QuestionnaireDraft
 } from "../core/workflow/interaction-support.js";
 import type { BridgeStateStore } from "../state/store.js";
+import type { UiLanguage } from "../types.js";
 import type { EgressMessageSendResult } from "../packs/contract.js";
 import type { TelegramInlineKeyboardMarkup, TelegramMessage } from "../telegram/api.js";
 import {
@@ -29,6 +30,8 @@ import { asRecord, getStringArray } from "../util/untyped.js";
 import { executeTelegramHtmlSurfaceOperation } from "../telegram/surface-adapter.js";
 import { isTelegramEditCommitted, type EgressEditResult } from "./runtime-surface-state.js";
 import { nowIso } from "../util/time.js";
+import { getTranslator } from "../i18n/index.js";
+import type { TranslationFunctions } from "../i18n/i18n-types.js";
 
 export interface PendingInteractionTextMode {
   sessionId: string;
@@ -74,11 +77,10 @@ interface InteractionBrokerAppServer {
   respondToServerRequestError(id: JsonRpcRequestId, code: number, message: string): Promise<void>;
 }
 
-const INTERACTION_HUB_HINT = "如需查看或刷新 Hub，可发送 /hub。";
-
 interface InteractionBrokerDeps {
   getStore: () => BridgeStateStore | null;
   getAppServer: () => InteractionBrokerAppServer | null;
+  getUiLanguage: () => UiLanguage;
   logger: Logger;
   preferBridgeCommandButtons: boolean;
   safeSendMessage(chatId: string, text: string): Promise<boolean>;
@@ -179,10 +181,12 @@ export class InteractionBroker {
   }
 
   async sendPendingInteractionBlockNotice(chatId: string): Promise<void> {
-    await this.deps.safeSendMessage(chatId, "当前正在等待你处理交互卡片，请先在卡片中回答或取消。");
+    const LL = getTranslator(this.deps.getUiLanguage());
+    await this.deps.safeSendMessage(chatId, LL.errors.pendingInteractionBlockNotice());
   }
 
   async cancelPendingTextInteraction(chatId: string, interactionId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -191,18 +195,18 @@ export class InteractionBroker {
     const row = store.getPendingInteraction(interactionId, chatId);
     if (!row) {
       this.clearPendingInteractionTextMode(interactionId);
-      await this.deps.safeSendMessage(chatId, "这个交互已过期。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interactionExpired());
       return;
     }
 
     const interaction = parseStoredInteraction(row.promptJson);
     if (!interaction) {
       this.clearPendingInteractionTextMode(interactionId);
-      await this.deps.safeSendMessage(chatId, "这个交互已过期。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interactionExpired());
       return;
     }
 
-    await this.cancelInteraction(chatId, row, interaction, "user_canceled_text_mode");
+    await this.cancelInteraction(chatId, row, interaction, "user_canceled_text_mode", LL);
   }
 
   async handlePendingInteractionTextAnswer(
@@ -210,6 +214,7 @@ export class InteractionBroker {
     mode: PendingInteractionTextMode,
     text: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -218,27 +223,27 @@ export class InteractionBroker {
     const row = store.getPendingInteraction(mode.interactionId, chatId);
     if (!row) {
       this.clearPendingInteractionTextMode(mode.interactionId);
-      await this.deps.safeSendMessage(chatId, "这个交互已过期。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interactionExpired());
       return;
     }
 
     if (row.sessionId !== mode.sessionId) {
       this.clearPendingInteractionTextMode(mode.interactionId);
-      await this.deps.safeSendMessage(chatId, "这个交互已过期。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interactionExpired());
       return;
     }
 
     const interaction = parseStoredInteraction(row.promptJson);
     if (!interaction || interaction.kind !== "questionnaire") {
       this.clearPendingInteractionTextMode(mode.interactionId);
-      await this.deps.safeSendMessage(chatId, "这个交互已过期。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interactionExpired());
       return;
     }
 
     if (!isPendingInteractionActionable(row)) {
       this.clearPendingInteractionTextMode(mode.interactionId);
-      await this.renderStoredPendingInteraction(chatId, row, interaction);
-      await this.deps.safeSendMessage(chatId, isPendingInteractionHandled(row) ? "这个操作已处理。" : "这个交互已过期。");
+      await this.renderStoredPendingInteraction(chatId, row, interaction, LL);
+      await this.deps.safeSendMessage(chatId, isPendingInteractionHandled(row) ? LL.errors.operationHandled() : LL.errors.interactionExpired());
       return;
     }
 
@@ -246,11 +251,11 @@ export class InteractionBroker {
     const currentQuestion = getCurrentQuestion(interaction, draft);
     if (!currentQuestion || currentQuestion.id !== mode.questionId) {
       this.clearPendingInteractionTextMode(mode.interactionId);
-      await this.deps.safeSendMessage(chatId, "这个交互已过期。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interactionExpired());
       return;
     }
 
-    const parsedAnswer = parseQuestionAnswerInput(currentQuestion, text, "text");
+    const parsedAnswer = parseQuestionAnswerInput(currentQuestion, text, "text", LL);
     if (!parsedAnswer.ok) {
       await this.deps.safeSendMessage(chatId, parsedAnswer.message);
       return;
@@ -267,14 +272,14 @@ export class InteractionBroker {
         ...row,
         state: "pending",
         responseJson: JSON.stringify(draft)
-      }, interaction);
+      }, interaction, LL);
       return;
     }
 
-    const payload = buildQuestionnaireSubmissionPayload(interaction, draft);
-    const success = await this.submitPendingInteractionResponse(chatId, row, interaction, payload);
+    const payload = buildQuestionnaireSubmissionPayload(interaction, draft, LL);
+    const success = await this.submitPendingInteractionResponse(chatId, row, interaction, payload, LL);
     if (!success) {
-      await this.deps.safeSendMessage(chatId, "暂时无法处理这个交互，请稍后再试。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interactionTemporarilyUnavailable());
     }
   }
 
@@ -284,31 +289,32 @@ export class InteractionBroker {
     messageId: number,
     parsed: Extract<ParsedCallbackData, { kind: "interaction_decision" }>
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const loaded = await this.loadPendingInteractionForCallback(chatId, messageId, parsed.interactionId, callbackQueryId);
     if (!loaded) {
       return;
     }
 
     const { row, interaction } = loaded;
-    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction)) {
+    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction, LL)) {
       return;
     }
 
     const decisionKey = resolveInteractionDecisionKey(interaction, parsed);
     if (!decisionKey) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const resolved = buildInteractionDecisionResolution(interaction, decisionKey);
     if (!resolved) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个操作当前不支持。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.operationNotSupported());
       return;
     }
 
-    const success = await this.submitPendingInteractionResponse(chatId, row, interaction, resolved.payload);
+    const success = await this.submitPendingInteractionResponse(chatId, row, interaction, resolved.payload, LL);
     if (!success) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "暂时无法处理这个交互，请稍后再试。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.interactionTemporarilyUnavailable());
       return;
     }
 
@@ -321,6 +327,7 @@ export class InteractionBroker {
     messageId: number,
     parsed: Extract<ParsedCallbackData, { kind: "interaction_question" }>
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     const loaded = await this.loadPendingInteractionForCallback(chatId, messageId, parsed.interactionId, callbackQueryId);
     if (!loaded || !store) {
@@ -328,18 +335,18 @@ export class InteractionBroker {
     }
 
     const { row, interaction } = loaded;
-    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction)) {
+    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction, LL)) {
       return;
     }
 
     if (interaction.kind !== "questionnaire") {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const questionId = resolveInteractionQuestionId(interaction, parsed);
     if (!questionId) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -347,11 +354,11 @@ export class InteractionBroker {
     const currentQuestion = getCurrentQuestion(interaction, draft);
     const selectedOption = currentQuestion?.options?.[parsed.optionIndex];
     if (!currentQuestion || currentQuestion.id !== questionId || !selectedOption) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
-    const parsedAnswer = parseQuestionAnswerInput(currentQuestion, selectedOption.value, "option");
+    const parsedAnswer = parseQuestionAnswerInput(currentQuestion, selectedOption.value, "option", LL);
     if (!parsedAnswer.ok) {
       await this.deps.safeAnswerCallbackQuery(callbackQueryId, parsedAnswer.message);
       return;
@@ -367,15 +374,15 @@ export class InteractionBroker {
         ...row,
         state: "pending",
         responseJson: JSON.stringify(draft)
-      }, interaction);
+      }, interaction, LL);
       await this.deps.safeAnswerCallbackQuery(callbackQueryId);
       return;
     }
 
-    const payload = buildQuestionnaireSubmissionPayload(interaction, draft);
-    const success = await this.submitPendingInteractionResponse(chatId, row, interaction, payload);
+    const payload = buildQuestionnaireSubmissionPayload(interaction, draft, LL);
+    const success = await this.submitPendingInteractionResponse(chatId, row, interaction, payload, LL);
     if (!success) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "暂时无法处理这个交互，请稍后再试。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.interactionTemporarilyUnavailable());
       return;
     }
 
@@ -388,6 +395,7 @@ export class InteractionBroker {
     messageId: number,
     parsed: Extract<ParsedCallbackData, { kind: "interaction_text" }>
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     const loaded = await this.loadPendingInteractionForCallback(chatId, messageId, parsed.interactionId, callbackQueryId);
     if (!loaded || !store) {
@@ -395,36 +403,36 @@ export class InteractionBroker {
     }
 
     const { row, interaction } = loaded;
-    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction)) {
+    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction, LL)) {
       return;
     }
 
     if (interaction.kind !== "questionnaire") {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const questionId = resolveInteractionQuestionId(interaction, parsed);
     if (!questionId) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const draft = parseQuestionnaireDraft(row.responseJson);
     const currentQuestion = getCurrentQuestion(interaction, draft);
     if (!currentQuestion || currentQuestion.id !== questionId) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     if (!questionAllowsTextAnswer(currentQuestion)) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个问题只能用按钮回答。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonsOnly());
       return;
     }
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || activeSession.sessionId !== row.sessionId) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "请先切换到这个会话，再发送文字回答。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.switchSessionBeforeTextReply());
       return;
     }
 
@@ -439,7 +447,7 @@ export class InteractionBroker {
       ...row,
       state: "awaiting_text",
       responseJson: JSON.stringify(draft)
-    }, interaction);
+    }, interaction, LL);
     await this.deps.safeAnswerCallbackQuery(callbackQueryId);
   }
 
@@ -449,18 +457,19 @@ export class InteractionBroker {
     messageId: number,
     interactionId: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const loaded = await this.loadPendingInteractionForCallback(chatId, messageId, interactionId, callbackQueryId);
     if (!loaded) {
       return;
     }
 
     const { row, interaction } = loaded;
-    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction)) {
+    if (await this.guardStaleInteraction(chatId, callbackQueryId, row, interaction, LL)) {
       return;
     }
 
-    const success = await this.cancelInteraction(chatId, row, interaction, "user_canceled_interaction");
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, success ? undefined : "暂时无法处理这个交互，请稍后再试。");
+    const success = await this.cancelInteraction(chatId, row, interaction, "user_canceled_interaction", LL);
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, success ? undefined : LL.errors.interactionTemporarilyUnavailable());
   }
 
   async handleInteractionAnswerToggleCallback(
@@ -470,6 +479,7 @@ export class InteractionBroker {
     interactionId: string,
     expanded: boolean
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const loaded = await this.loadPendingInteractionForCallback(chatId, messageId, interactionId, callbackQueryId);
     if (!loaded) {
       return;
@@ -477,17 +487,18 @@ export class InteractionBroker {
 
     const { row, interaction } = loaded;
     if (row.state !== "answered") {
-      await this.renderStoredPendingInteraction(chatId, row, interaction);
+      await this.renderStoredPendingInteraction(chatId, row, interaction, LL);
       await this.deps.safeAnswerCallbackQuery(
         callbackQueryId,
-        isPendingInteractionHandled(row) ? "这个操作已处理。" : "这个按钮已过期，请重新操作。"
+        isPendingInteractionHandled(row) ? LL.errors.operationHandled() : LL.errors.buttonExpired()
       );
       return;
     }
 
     const rendered = buildPendingInteractionSurface(row, interaction, {
       answeredExpanded: expanded,
-      preferBridgeCommandButtons: this.deps.preferBridgeCommandButtons
+      preferBridgeCommandButtons: this.deps.preferBridgeCommandButtons,
+      hubHint: LL.hints.hubCommandReminder()
     });
     const result = await this.deps.safeEditHtmlMessageText(chatId, messageId, rendered.text, rendered.replyMarkup);
     if (isTelegramEditCommitted(result)) {
@@ -496,11 +507,11 @@ export class InteractionBroker {
     }
 
     if (result.outcome === "rate_limited") {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "当前平台正在限流，请稍后再试。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.platformRateLimited());
       return;
     }
 
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, "暂时无法更新这条消息，请稍后再试。");
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.messageUpdateFailed());
   }
 
   async handleNormalizedServerRequest(
@@ -544,6 +555,7 @@ export class InteractionBroker {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     const pending = store.createPendingInteraction({
       chatId: activeTurn.chatId,
       sessionId: activeTurn.sessionId,
@@ -559,7 +571,7 @@ export class InteractionBroker {
     });
     await this.deps.appendInteractionCreatedJournal(pending);
 
-    const sent = await this.sendPendingInteractionCard(activeTurn.chatId, pending, normalized);
+    const sent = await this.sendPendingInteractionCard(activeTurn.chatId, pending, normalized, LL);
     if (sent.outcome !== "sent") {
       store.markPendingInteractionFailed(pending.interactionId, "interaction_delivery_failed");
       await this.deps.appendInteractionResolvedJournal(pending, {
@@ -579,6 +591,7 @@ export class InteractionBroker {
     threadId: string | null,
     requestId: JsonRpcRequestId | null
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store || !threadId || requestId === null) {
       return;
@@ -600,7 +613,8 @@ export class InteractionBroker {
         await this.renderStoredPendingInteraction(
           row.chatId,
           { ...row, state: "answered", responseJson, resolvedAt: nowIso() },
-          interaction
+          interaction,
+          LL
         );
       }
     }
@@ -625,6 +639,7 @@ export class InteractionBroker {
       return;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     for (const interactionRow of pending) {
       const updatedRow = await this.updatePendingInteractionTerminalState(
         interactionRow,
@@ -646,7 +661,7 @@ export class InteractionBroker {
         ...interactionRow,
         state: options.state,
         errorReason: options.reason
-      }, interaction);
+      }, interaction, LL);
     }
   }
 
@@ -694,26 +709,27 @@ export class InteractionBroker {
     interactionId: string,
     callbackQueryId: string
   ): Promise<{ row: PendingInteractionRow; interaction: NormalizedInteraction } | null> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return null;
     }
 
     const row = store.getPendingInteraction(interactionId, chatId);
     if (!row) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return null;
     }
 
     if (row.messageId !== null && row.messageId !== messageId) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return null;
     }
 
     const interaction = parseStoredInteraction(row.promptJson);
     if (!interaction) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return null;
     }
 
@@ -724,15 +740,16 @@ export class InteractionBroker {
     chatId: string,
     callbackQueryId: string,
     row: PendingInteractionRow,
-    interaction: NormalizedInteraction
+    interaction: NormalizedInteraction,
+    LL: TranslationFunctions
   ): Promise<boolean> {
     if (isPendingInteractionActionable(row)) {
       return false;
     }
-    await this.renderStoredPendingInteraction(chatId, row, interaction);
+    await this.renderStoredPendingInteraction(chatId, row, interaction, LL);
     await this.deps.safeAnswerCallbackQuery(
       callbackQueryId,
-      isPendingInteractionHandled(row) ? "这个操作已处理。" : "这个按钮已过期，请重新操作。"
+      isPendingInteractionHandled(row) ? LL.errors.operationHandled() : LL.errors.buttonExpired()
     );
     return true;
   }
@@ -740,14 +757,16 @@ export class InteractionBroker {
   private async renderStoredPendingInteraction(
     chatId: string,
     row: PendingInteractionRow,
-    interaction: NormalizedInteraction
+    interaction: NormalizedInteraction,
+    LL: TranslationFunctions
   ): Promise<void> {
     if (row.messageId === null) {
       return;
     }
 
     const rendered = buildPendingInteractionSurface(row, interaction, {
-      preferBridgeCommandButtons: this.deps.preferBridgeCommandButtons
+      preferBridgeCommandButtons: this.deps.preferBridgeCommandButtons,
+      hubHint: LL.hints.hubCommandReminder()
     });
     const result = await executeTelegramHtmlSurfaceOperation({
       intent: "pending_interaction",
@@ -767,10 +786,12 @@ export class InteractionBroker {
   private async sendPendingInteractionCard(
     chatId: string,
     pending: PendingInteractionRow,
-    interaction: NormalizedInteraction
+    interaction: NormalizedInteraction,
+    LL: TranslationFunctions
   ): Promise<PlatformSurfaceOperationResult> {
     const rendered = buildPendingInteractionSurface(pending, interaction, {
-      preferBridgeCommandButtons: this.deps.preferBridgeCommandButtons
+      preferBridgeCommandButtons: this.deps.preferBridgeCommandButtons,
+      hubHint: LL.hints.hubCommandReminder()
     });
     return await executeTelegramHtmlSurfaceOperation({
       intent: "pending_interaction",
@@ -785,28 +806,29 @@ export class InteractionBroker {
     chatId: string,
     row: PendingInteractionRow,
     interaction: NormalizedInteraction,
-    errorReason: string
+    errorReason: string,
+    LL: TranslationFunctions
   ): Promise<boolean> {
     if (interaction.kind === "approval") {
       const resolved = buildInteractionDecisionResolution(interaction, "cancel");
       return resolved
-        ? await this.submitPendingInteractionResponse(chatId, row, interaction, resolved.payload, {
+        ? await this.submitPendingInteractionResponse(chatId, row, interaction, resolved.payload, LL, {
           state: "canceled",
           errorReason
         })
-        : await this.failPendingInteraction(chatId, row, interaction, errorReason, {
+        : await this.failPendingInteraction(chatId, row, interaction, errorReason, LL, {
           state: "canceled"
         });
     }
 
     if (interaction.kind === "elicitation" || (interaction.kind === "questionnaire" && interaction.submission === "mcp_elicitation_form")) {
-      return await this.submitPendingInteractionResponse(chatId, row, interaction, { action: "cancel" }, {
+      return await this.submitPendingInteractionResponse(chatId, row, interaction, { action: "cancel" }, LL, {
         state: "canceled",
         errorReason
       });
     }
 
-    return await this.failPendingInteraction(chatId, row, interaction, errorReason, {
+    return await this.failPendingInteraction(chatId, row, interaction, errorReason, LL, {
       state: "canceled"
     });
   }
@@ -816,6 +838,7 @@ export class InteractionBroker {
     row: PendingInteractionRow,
     interaction: NormalizedInteraction,
     payload: unknown,
+    LL: TranslationFunctions,
     options?: {
       state?: Extract<PendingInteractionState, "answered" | "canceled">;
       errorReason?: string | null;
@@ -848,7 +871,7 @@ export class InteractionBroker {
         state: terminalState,
         responseJson: payloadJson,
         errorReason: options?.errorReason ?? null
-      }, interaction);
+      }, interaction, LL);
       return true;
     } catch (error) {
       await this.deps.logger.warn("interaction response dispatch failed", {
@@ -867,7 +890,7 @@ export class InteractionBroker {
         ...row,
         state: "failed",
         errorReason: "response_dispatch_failed"
-      }, interaction);
+      }, interaction, LL);
       return false;
     }
   }
@@ -877,6 +900,7 @@ export class InteractionBroker {
     row: PendingInteractionRow,
     interaction: NormalizedInteraction,
     reason: string,
+    LL: TranslationFunctions,
     options?: {
       state?: Extract<PendingInteractionState, "failed" | "canceled">;
     }
@@ -909,7 +933,7 @@ export class InteractionBroker {
         ...row,
         state: terminalState,
         errorReason: reason
-      }, interaction);
+      }, interaction, LL);
       return true;
     } catch (error) {
       await this.deps.logger.warn("interaction failure dispatch failed", {
@@ -928,6 +952,7 @@ function buildPendingInteractionSurface(
   options?: {
     answeredExpanded?: boolean;
     preferBridgeCommandButtons?: boolean;
+    hubHint?: string;
   }
 ): {
   text: string;
@@ -935,7 +960,7 @@ function buildPendingInteractionSurface(
 } {
   return renderInteractionCardView(createInteractionCardView(row, interaction, {
     ...(options?.answeredExpanded !== undefined ? { answeredExpanded: options.answeredExpanded } : {}),
-    hubHint: INTERACTION_HUB_HINT,
+    ...(options?.hubHint ? { hubHint: options.hubHint } : {}),
     ...(options?.preferBridgeCommandButtons ? { bridgeActions: [{ command: "hub" as const }] } : {})
   }));
 }
@@ -978,12 +1003,13 @@ function questionAllowsTextAnswer(question: NormalizedQuestion): boolean {
 
 function buildQuestionnaireSubmissionPayload(
   interaction: NormalizedQuestionnaireInteraction,
-  draft: QuestionnaireDraft
+  draft: QuestionnaireDraft,
+  LL: TranslationFunctions
 ): unknown {
   if (interaction.submission === "mcp_elicitation_form") {
     return {
       action: "accept",
-      content: buildMcpElicitationFormContent(interaction, draft)
+      content: buildMcpElicitationFormContent(interaction, draft, LL)
     };
   }
 
@@ -1015,7 +1041,8 @@ function buildToolQuestionnaireAnswers(
 
 function buildMcpElicitationFormContent(
   interaction: NormalizedQuestionnaireInteraction,
-  draft: QuestionnaireDraft
+  draft: QuestionnaireDraft,
+  LL: TranslationFunctions
 ): Record<string, unknown> {
   const content: Record<string, unknown> = {};
   for (const question of interaction.questions) {
@@ -1023,7 +1050,7 @@ function buildMcpElicitationFormContent(
       continue;
     }
 
-    const value = toQuestionAnswerValue(question, draft.answers[question.id]);
+    const value = toQuestionAnswerValue(question, draft.answers[question.id], LL);
     if (value === null || value === undefined) {
       continue;
     }
@@ -1039,11 +1066,12 @@ type ParsedQuestionAnswer = { ok: true; value: unknown } | { ok: false; message:
 function parseQuestionAnswerInput(
   question: NormalizedQuestion,
   rawInput: string,
-  source: "option" | "text"
+  source: "option" | "text",
+  LL: TranslationFunctions
 ): ParsedQuestionAnswer {
   if (rawInput === SKIP_QUESTION_OPTION_VALUE) {
     if (question.required) {
-      return { ok: false, message: "这个问题不能跳过。" };
+      return { ok: false, message: LL.errors.cannotSkip() };
     }
     return { ok: true, value: null };
   }
@@ -1053,14 +1081,14 @@ function parseQuestionAnswerInput(
       const trimmed = rawInput.trim();
       const value = Number(trimmed);
       if (!trimmed || !Number.isFinite(value)) {
-        return { ok: false, message: "请输入有效数字。" };
+        return { ok: false, message: LL.errors.invalidNumber() };
       }
       return { ok: true, value };
     }
     case "integer": {
       const trimmed = rawInput.trim();
       if (!/^[-+]?\d+$/u.test(trimmed)) {
-        return { ok: false, message: "请输入整数。" };
+        return { ok: false, message: LL.errors.integerRequired() };
       }
       return { ok: true, value: Number(trimmed) };
     }
@@ -1070,45 +1098,47 @@ function parseQuestionAnswerInput(
         return { ok: true, value: parsed };
       }
       const normalized = rawInput.trim().toLowerCase();
-      if (normalized === "y" || normalized === "是") {
+      if (normalized === "y" || normalized === LL.common.yes().toLowerCase()) {
         return { ok: true, value: true };
       }
-      if (normalized === "n" || normalized === "否") {
+      if (normalized === "n" || normalized === LL.common.no().toLowerCase()) {
         return { ok: true, value: false };
       }
-      return { ok: false, message: "请输入 true/false 或 是/否。" };
+      return { ok: false, message: LL.errors.booleanFormat() };
     }
     case "string_array": {
       const values = rawInput.split(/[,\uFF0C]/u).map((entry) => entry.trim()).filter((entry) => entry.length > 0);
       if (values.length === 0) {
         return {
           ok: false,
-          message: question.required ? "请至少输入一个值。" : "请先输入至少一个值，或点击跳过。"
+          message: question.required ? LL.errors.atLeastOneValue() : LL.errors.atLeastOneValueOrSkip()
         };
       }
       const invalid = question.allowedValues
         ? values.filter((entry) => !question.allowedValues?.includes(entry))
         : [];
       if (invalid.length > 0) {
-        return { ok: false, message: buildAllowedValuesMessage(question.allowedValues) };
+        return { ok: false, message: buildAllowedValuesMessage(question.allowedValues, LL) };
       }
       return { ok: true, value: values };
     }
     case "string":
     default: {
       if (source === "text" && rawInput.trim().length === 0) {
-        return { ok: false, message: "回答不能为空。" };
+        return { ok: false, message: LL.errors.answerRequired() };
       }
       if (question.allowedValues && !(source === "text" && question.isOther) && !question.allowedValues.includes(rawInput)) {
-        return { ok: false, message: buildAllowedValuesMessage(question.allowedValues) };
+        return { ok: false, message: buildAllowedValuesMessage(question.allowedValues, LL) };
       }
       return { ok: true, value: rawInput };
     }
   }
 }
 
-function buildAllowedValuesMessage(values: string[] | null): string {
-  return values && values.length > 0 ? `可用值：${values.join("、")}。` : "输入值不合法。";
+function buildAllowedValuesMessage(values: string[] | null, LL: TranslationFunctions): string {
+  return values && values.length > 0
+    ? `${LL.errors.allowedValuesPrefix()}${values.join("、")}${LL.errors.allowedValuesSuffix()}`
+    : LL.errors.invalidValue();
 }
 
 function toToolQuestionnaireAnswerArray(value: unknown): string[] | null {
@@ -1126,7 +1156,7 @@ function toToolQuestionnaireAnswerArray(value: unknown): string[] | null {
   return legacy && legacy.length > 0 ? legacy : null;
 }
 
-function toQuestionAnswerValue(question: NormalizedQuestion, value: unknown): unknown {
+function toQuestionAnswerValue(question: NormalizedQuestion, value: unknown, LL: TranslationFunctions): unknown {
   if (value === null || value === undefined) {
     return null;
   }
@@ -1162,12 +1192,12 @@ function toQuestionAnswerValue(question: NormalizedQuestion, value: unknown): un
       return legacyAnswers;
     }
 
-    const parsed = parseQuestionAnswerInput(question, legacyAnswers[0] ?? "", "text");
+    const parsed = parseQuestionAnswerInput(question, legacyAnswers[0] ?? "", "text", LL);
     return parsed.ok ? parsed.value : null;
   }
 
   if (typeof value === "string") {
-    const parsed = parseQuestionAnswerInput(question, value, "text");
+    const parsed = parseQuestionAnswerInput(question, value, "text", LL);
     return parsed.ok ? parsed.value : null;
   }
 

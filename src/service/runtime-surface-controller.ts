@@ -74,6 +74,7 @@ import {
   type TelegramEditResult
 } from "./runtime-surface-state.js";
 import { dispatchHtmlSurface } from "./surface-dispatcher.js";
+import { getTranslator } from "../i18n/index.js";
 
 const INSPECT_PLAIN_TEXT_FALLBACK_LIMIT = 3500;
 const FAILED_EDIT_RETRY_MS = 5000;
@@ -95,8 +96,6 @@ const RECOVERY_HUB_COMPACT_SESSION_NAME_LIMIT = 32;
 const RECOVERY_HUB_TIGHT_SESSION_NAME_LIMIT = 24;
 const HUB_AUTO_REFRESH_START_DELAY_MS = 1500;
 const HUB_AUTO_REFRESH_RECOVERY_DELAY_MS = 1000;
-const HUB_COMMAND_REMINDER_TEXT = "需要查看运行卡片时，可发送 /hub。";
-
 interface RuntimePreferencesDraftState {
   chatId: string;
   messageId: number;
@@ -375,8 +374,9 @@ export class RuntimeSurfaceController {
       return null;
     }
 
+    const LL = getTranslator(this.deps.getUiLanguage());
     state.reminderShown = true;
-    return HUB_COMMAND_REMINDER_TEXT;
+    return LL.hints.hubCommandReminderShort();
   }
 
   consumeHubCommandReminderForTurn(chatId: string, turnId: string | null | undefined): string | null {
@@ -910,9 +910,10 @@ export class RuntimeSurfaceController {
     token: string,
     page: number
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const draft = this.getRuntimePreferencesDraft(token, chatId, messageId);
     if (!draft) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /runtime。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRuntime());
       return;
     }
 
@@ -928,9 +929,10 @@ export class RuntimeSurfaceController {
     token: string,
     field: RuntimeStatusField
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const draft = this.getRuntimePreferencesDraft(token, chatId, messageId);
     if (!draft) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /runtime。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRuntime());
       return;
     }
 
@@ -947,15 +949,16 @@ export class RuntimeSurfaceController {
     messageId: number,
     token: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "状态存储当前不可用。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.stateStoreUnavailable());
       return;
     }
 
     const draft = this.getRuntimePreferencesDraft(token, chatId, messageId);
     if (!draft) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /runtime。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRuntime());
       return;
     }
 
@@ -969,7 +972,7 @@ export class RuntimeSurfaceController {
     );
     await this.deps.safeAnswerCallbackQuery(
       callbackQueryId,
-      delivered ? "已保存。" : "设置已保存，但消息暂时无法更新。"
+      delivered ? LL.success.settingsSaved() : LL.success.settingsSavedButMessageUpdateFailed()
     );
     await this.deps.refreshActiveRuntimeStatusCard(chatId, "runtime_preferences_saved");
   }
@@ -980,15 +983,16 @@ export class RuntimeSurfaceController {
     messageId: number,
     token: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const draft = this.getRuntimePreferencesDraft(token, chatId, messageId);
     if (!draft) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /runtime。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRuntime());
       return;
     }
 
     draft.fields = [...DEFAULT_RUNTIME_STATUS_FIELDS];
     draft.page = 0;
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, "已恢复默认，记得保存。");
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.success.defaultsRestored());
     await this.renderRuntimePreferencesDraft(token, draft);
   }
 
@@ -998,9 +1002,10 @@ export class RuntimeSurfaceController {
     messageId: number,
     token: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const draft = this.getRuntimePreferencesDraft(token, chatId, messageId);
     if (!draft) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /runtime。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRuntime());
       return;
     }
 
@@ -1016,7 +1021,7 @@ export class RuntimeSurfaceController {
       return;
     }
 
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, "暂时无法关闭这条消息，请稍后再试。");
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.closeMessageFailed());
   }
 
   buildStatusCardRenderPayload(
@@ -1325,14 +1330,14 @@ export class RuntimeSurfaceController {
   }
 
   private formatLiveHubTerminalState(state: RuntimeHubTerminalState): string {
-    const language = this.deps.getUiLanguage();
+    const LL = getTranslator(this.deps.getUiLanguage());
     switch (state) {
       case "completed":
-        return language === "en" ? "Completed" : "已完成";
+        return LL.statuses.completed();
       case "failed":
-        return language === "en" ? "Failed" : "失败";
+        return LL.statuses.failed();
       case "interrupted":
-        return language === "en" ? "Interrupted" : "已中断";
+        return LL.statuses.interrupted();
     }
   }
 
@@ -1577,6 +1582,7 @@ export class RuntimeSurfaceController {
     replyMarkup: TelegramInlineKeyboardMarkup;
     visibleState: RuntimeHubVisibleState;
   } {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const visibleState = this.getDesiredRuntimeHubVisibleState(hubState);
     const store = this.deps.getStore();
     const allSessions = visibleState.sessionIds
@@ -1588,9 +1594,7 @@ export class RuntimeSurfaceController {
         projectName: session.projectAlias?.trim() || session.projectName,
         state: session.failureReason === "bridge_restart" ? "Recovered" : session.status,
         progressText: session.failureReason === "bridge_restart"
-          ? (this.deps.getUiLanguage() === "en"
-            ? "Last turn stopped because the bridge restarted"
-            : "上次运行因桥重启而停止")
+          ? LL.statuses.stoppedByBridgeRestart()
           : null,
         isFocused: session.sessionId === visibleState.focusedSessionId,
         isActiveInputTarget: session.sessionId === (store?.getActiveSession(chatId)?.sessionId ?? null)
@@ -1756,16 +1760,16 @@ export class RuntimeSurfaceController {
   }
 
   private formatStandaloneHubSessionState(session: SessionRow): string {
-    const language = this.deps.getUiLanguage();
+    const LL = getTranslator(this.deps.getUiLanguage());
     switch (session.status) {
       case "idle":
-        return language === "en" ? "Idle" : "空闲";
+        return LL.statuses.idle();
       case "running":
-        return language === "en" ? "Running" : "执行中";
+        return LL.statuses.running();
       case "interrupted":
-        return language === "en" ? "Interrupted" : "已中断";
+        return LL.statuses.interrupted();
       case "failed":
-        return language === "en" ? "Failed" : "失败";
+        return LL.statuses.failed();
       default:
         return session.status;
     }
@@ -1942,9 +1946,10 @@ export class RuntimeSurfaceController {
     version: number,
     slot: number
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const hubState = this.getLiveHubState(chatId, messageId);
     if (!hubState || hubState.token !== token || hubState.visibleState.callbackVersion !== version) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -1953,7 +1958,7 @@ export class RuntimeSurfaceController {
       : hubState.visibleState.sessionIds[slot] ?? null;
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
     if (hubState.kind === "live" && !sessionId) {
@@ -1970,7 +1975,7 @@ export class RuntimeSurfaceController {
         createPlatformChatRef(hubState.chatId)
       )
     ) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -1982,7 +1987,7 @@ export class RuntimeSurfaceController {
     hubState.planExpanded = false;
     hubState.agentsExpanded = false;
     hubState.callbackVersion += 1;
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, `已切换到会话：${truncateText(session.displayName, 40)}`);
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.success.sessionSwitchedPrefix() + truncateText(session.displayName, 40));
 
     if (hubState.kind === "live") {
       await this.refreshLiveRuntimeHubsNow(hubState.chatId, "hub_session_selected", sessionId);
@@ -2415,22 +2420,23 @@ export class RuntimeSurfaceController {
     expanded: boolean,
     section: "plan" | "agents"
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const hubState = this.resolveFocusedRuntimeHubSession(chatId, messageId, sessionId, { requireLive: true });
     if (!hubState) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const activeTurn = this.deps.listActiveTurns().find((candidate) => candidate.sessionId === sessionId) ?? null;
     if (!activeTurn) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const inspect = activeTurn.tracker.getInspectSnapshot();
     const snapshotData = section === "plan" ? inspect.planSnapshot : inspect.agentSnapshot;
     if (snapshotData.length === 0) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -2439,7 +2445,7 @@ export class RuntimeSurfaceController {
       ? hubState.visibleState.planExpanded
       : hubState.visibleState.agentsExpanded;
     if (visibleExpanded === expanded) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个操作已处理。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.operationHandled());
       return;
     }
 
@@ -3259,15 +3265,16 @@ export class RuntimeSurfaceController {
       page?: number;
     }
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const view = store.getTerminalResultView(answerId, chatId);
     if (!view) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -3294,7 +3301,7 @@ export class RuntimeSurfaceController {
     const page = mode.page ?? 1;
     const pageHtml = view.pages[page - 1];
     if (!pageHtml) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -3326,15 +3333,16 @@ export class RuntimeSurfaceController {
       page?: number;
     }
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const view = store.getTerminalResultView(answerId, chatId);
     if (!view) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -3357,7 +3365,7 @@ export class RuntimeSurfaceController {
     const page = mode.page ?? 1;
     const pageHtml = view.pages[page - 1];
     if (!pageHtml) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -3386,15 +3394,16 @@ export class RuntimeSurfaceController {
       page?: number;
     }
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const view = store.getTerminalResultView(answerId, chatId);
     if (!view) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -3423,7 +3432,7 @@ export class RuntimeSurfaceController {
     const page = mode.page ?? 1;
     const pageHtml = view.pages[page - 1];
     if (!pageHtml) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -3440,6 +3449,7 @@ export class RuntimeSurfaceController {
   }
 
   async handleInspect(chatId: string, sessionId?: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -3449,13 +3459,13 @@ export class RuntimeSurfaceController {
       ? this.getInspectableSession(chatId, sessionId)
       : store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     const payload = await this.getInspectRenderPayload(activeSession);
     if (!payload) {
-      await this.deps.safeSendMessage(chatId, "当前没有可用的活动详情。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveDetails());
       return;
     }
 
@@ -3489,15 +3499,16 @@ export class RuntimeSurfaceController {
       page: number;
     }
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getInspectableSession(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /inspect。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredInspect());
       return;
     }
 
     const payload = await this.getInspectRenderPayload(session);
     if (!payload) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "当前没有可用的活动详情。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.noActiveDetails());
       return;
     }
 
@@ -3525,7 +3536,7 @@ export class RuntimeSurfaceController {
     const fallbackSent = await this.deps.safeSendMessage(chatId, buildInspectPlainTextFallback(rendered.text));
     await this.deps.safeAnswerCallbackQuery(
       callbackQueryId,
-      fallbackSent ? "详情过长，已改为纯文本发送。" : "暂时无法更新详情，请稍后重试。"
+      fallbackSent ? LL.errors.detailsSentAsText() : LL.errors.detailsUpdateFailed()
     );
   }
 
@@ -3535,9 +3546,10 @@ export class RuntimeSurfaceController {
     messageId: number,
     sessionId: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getInspectableSession(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /inspect。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredInspect());
       return;
     }
 
@@ -3547,7 +3559,7 @@ export class RuntimeSurfaceController {
       return;
     }
 
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, "暂时无法关闭这条消息，请稍后再试。");
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.closeMessageFailed());
   }
 
   private scheduleRuntimeCardRetry(
@@ -3674,17 +3686,18 @@ export class RuntimeSurfaceController {
     callbackQueryId: string,
     result: TelegramEditResult
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     if (isTelegramEditCommitted(result)) {
       await this.deps.safeAnswerCallbackQuery(callbackQueryId);
       return;
     }
 
     if (result.outcome === "rate_limited") {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "当前平台正在限流，请稍后再试。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.platformRateLimited());
       return;
     }
 
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, "暂时无法更新这条消息，请稍后再试。");
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.messageUpdateFailed());
   }
 
   private async finishPersistedFinalAnswerRender(
@@ -3698,6 +3711,7 @@ export class RuntimeSurfaceController {
       syncActiveSession?: boolean;
     }
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     if (isTelegramEditCommitted(result)) {
       this.deps.getStore()?.setTerminalResultMessageId(answerId, messageId);
       this.deps.getStore()?.setTerminalResultDeliveryState(answerId, "visible");
@@ -3709,11 +3723,11 @@ export class RuntimeSurfaceController {
     }
 
     if (result.outcome === "rate_limited") {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "当前平台正在限流，请稍后再试。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.platformRateLimited());
       return;
     }
 
-    await this.deps.safeAnswerCallbackQuery(callbackQueryId, "暂时无法更新这条消息，请稍后再试。");
+    await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.messageUpdateFailed());
   }
 
   private async syncFinalAnswerActiveSessionOnSuccess(

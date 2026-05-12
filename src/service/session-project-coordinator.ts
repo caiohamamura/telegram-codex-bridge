@@ -1,5 +1,6 @@
 import { basename, relative, sep } from "node:path";
 
+import { getTranslator } from "../i18n/index.js";
 import type { BridgeConfig } from "../config.js";
 import type { BridgeCommandActionView } from "../core/interaction-model/bridge-actions.js";
 import { buildFeishuStatusReplyMarkup, buildFeishuStatusText } from "../feishu/ui.js";
@@ -256,6 +257,7 @@ export class SessionProjectCoordinator {
   }
 
   async cancelPendingProjectInput(chatId: string): Promise<boolean> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     if (this.pendingRenameStates.has(chatId)) {
       const pendingRename = this.pendingRenameStates.get(chatId);
       this.pendingRenameStates.delete(chatId);
@@ -264,12 +266,12 @@ export class SessionProjectCoordinator {
         await this.consumeEphemeralMessage(
           chatId,
           pendingRename.sourceMessageId,
-          pendingRename.kind === "project" ? "已取消项目别名修改。" : "已取消会话重命名。"
+          pendingRename.kind === "project" ? LL.success.renameProjectCancelled() : LL.success.renameSessionCancelled()
         );
       } else {
         await this.deps.safeSendMessage(
           chatId,
-          pendingRename?.kind === "project" ? "已取消项目别名修改。" : "已取消会话重命名。"
+          pendingRename?.kind === "project" ? LL.success.renameProjectCancelled() : LL.success.renameSessionCancelled()
         );
       }
       return true;
@@ -308,6 +310,7 @@ export class SessionProjectCoordinator {
   }
 
   async handleProjectPick(chatId: string, messageId: number, projectKey: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -319,13 +322,13 @@ export class SessionProjectCoordinator {
     }
 
     if (pickerState.resolved) {
-      await this.deps.safeSendMessage(chatId, "这个操作已处理。");
+      await this.deps.safeSendMessage(chatId, LL.errors.operationHandled());
       return;
     }
 
     const candidate = pickerState.picker.projectMap.get(projectKey);
     if (!candidate) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
@@ -361,6 +364,7 @@ export class SessionProjectCoordinator {
   }
 
   async openBrowseRootPicker(chatId: string, messageId: number): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const pickerState = await this.requireActivePickerState(chatId, messageId);
     if (!pickerState) {
       return;
@@ -368,7 +372,7 @@ export class SessionProjectCoordinator {
 
     const roots = pickerState.browseRoots;
     if (roots.length === 0) {
-      await this.deps.safeSendMessage(chatId, "当前没有可浏览的根目录。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noBrowsableRoot());
       return;
     }
 
@@ -395,19 +399,20 @@ export class SessionProjectCoordinator {
   }
 
   async handleBrowseRootPick(chatId: string, messageId: number, rootIndex: number): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const pickerState = await this.requireActivePickerState(chatId, messageId);
     if (!pickerState) {
       return;
     }
 
     if (!pickerState.inBrowseRootPicker) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
     const rootPath = pickerState.browseRoots[rootIndex];
     if (!rootPath) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
@@ -446,6 +451,7 @@ export class SessionProjectCoordinator {
   }
 
   async handleManualPathInput(chatId: string, text: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -453,7 +459,7 @@ export class SessionProjectCoordinator {
 
     const pickerState = this.pickerStates.get(chatId);
     if (!pickerState) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
@@ -461,7 +467,7 @@ export class SessionProjectCoordinator {
     if (!candidate) {
       await this.deps.safeSendMessage(
         chatId,
-        "这个目录不可用，请重新发送目录路径。\n也可以发送 /cancel 返回项目列表。",
+        LL.errors.directoryUnavailable(),
         this.buildBridgeCommandActionsReplyMarkup([{ command: "cancel" }])
       );
       return;
@@ -477,6 +483,7 @@ export class SessionProjectCoordinator {
   }
 
   async confirmManualProject(chatId: string, messageId: number, projectKey: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -488,13 +495,13 @@ export class SessionProjectCoordinator {
     }
 
     if (pickerState.resolved) {
-      await this.deps.safeSendMessage(chatId, "这个操作已处理。");
+      await this.deps.safeSendMessage(chatId, LL.errors.operationHandled());
       return;
     }
 
     const candidate = pickerState.picker.projectMap.get(projectKey);
     if (!candidate) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
@@ -518,10 +525,11 @@ export class SessionProjectCoordinator {
   }
 
   async returnToProjectPicker(chatId: string, messageId?: number): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const pickerState = messageId ? await this.requireActivePickerState(chatId, messageId) : this.pickerStates.get(chatId);
     if (!pickerState) {
       if (!messageId) {
-        await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+        await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       }
       return;
     }
@@ -548,6 +556,7 @@ export class SessionProjectCoordinator {
   }
 
   async sendStatus(chatId: string, fallbackSnapshot: ReadinessSnapshot | null): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -556,7 +565,7 @@ export class SessionProjectCoordinator {
     const snapshot = store.getReadinessSnapshot() ?? this.deps.getSnapshot() ?? fallbackSnapshot;
     const activeSession = store.getActiveSession(chatId);
     if (!snapshot) {
-      await this.deps.safeSendMessage(chatId, "桥接状态未知，请在本机运行 ctb doctor。");
+      await this.deps.safeSendMessage(chatId, LL.errors.bridgeStateUnknown());
       return;
     }
 
@@ -616,6 +625,7 @@ export class SessionProjectCoordinator {
   }
 
   async handleResume(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -626,12 +636,12 @@ export class SessionProjectCoordinator {
     const parsedArgs = parseResumeArgs(args);
     const cwd = parsedArgs.includeAll ? undefined : activeSession?.projectPath;
     if (!cwd && !parsedArgs.includeAll) {
-      await this.deps.safeSendMessage(chatId, "请先用 /new 选择项目，或用 /resume all 查看全部 Codex 会话。");
+      await this.deps.safeSendMessage(chatId, LL.hints.selectProjectOrResume());
       return;
     }
 
     if (parsedArgs.kind === "invalid") {
-      await this.deps.safeSendMessage(chatId, "找不到这个 Codex 会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.codexSessionNotFound());
       return;
     }
 
@@ -656,14 +666,14 @@ export class SessionProjectCoordinator {
     });
     const target = targetPage.threads[(parsedArgs.index - 1) % RESUME_THREAD_PAGE_SIZE];
     if (!target) {
-      await this.deps.safeSendMessage(chatId, "找不到这个 Codex 会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.codexSessionNotFound());
       return;
     }
 
     const existingSession = store.getSessionByThreadId(target.id);
     if (existingSession) {
       if (existingSession.chatId !== chatId) {
-        await this.deps.safeSendMessage(chatId, "这个 Codex 会话已绑定到另一个聊天。");
+        await this.deps.safeSendMessage(chatId, LL.errors.sessionBoundToAnotherChat());
         return;
       }
       if (existingSession.archived) {
@@ -706,6 +716,7 @@ export class SessionProjectCoordinator {
     messageId: number,
     options: { includeAll: boolean; page: number }
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -715,7 +726,7 @@ export class SessionProjectCoordinator {
     const activeSession = store.getActiveSession(chatId);
     const cwd = options.includeAll ? undefined : activeSession?.projectPath;
     if (!cwd && !options.includeAll) {
-      await this.deps.safeSendMessage(chatId, "请先用 /new 选择项目，或用 /resume all 查看全部 Codex 会话。");
+      await this.deps.safeSendMessage(chatId, LL.hints.selectProjectOrResume());
       return;
     }
 
@@ -741,6 +752,7 @@ export class SessionProjectCoordinator {
   }
 
   async handleUse(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -748,14 +760,14 @@ export class SessionProjectCoordinator {
 
     const index = Number.parseInt(args.trim(), 10);
     if (!Number.isFinite(index) || index < 1) {
-      await this.deps.safeSendMessage(chatId, "找不到这个会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.sessionNotFound());
       return;
     }
 
     const sessions = store.listSessions(chatId);
     const target = sessions[index - 1];
     if (!target) {
-      await this.deps.safeSendMessage(chatId, "找不到这个会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.sessionNotFound());
       return;
     }
 
@@ -768,6 +780,7 @@ export class SessionProjectCoordinator {
   }
 
   async handleArchive(chatId: string, args = ""): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -784,24 +797,25 @@ export class SessionProjectCoordinator {
       return;
     }
 
-    await this.deps.safeSendMessage(chatId, "只支持 /archive 或 /archive all。");
+    await this.deps.safeSendMessage(chatId, LL.errors.archiveOnlyOrAll());
   }
 
   private async handleArchiveActiveSession(chatId: string, store: BridgeStateStore): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     if (activeSession.status === "running") {
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请先等待完成或停止当前操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusy());
       return;
     }
 
     const result = await this.archiveSession(chatId, store, activeSession);
     if (!result.ok) {
-      await this.deps.safeSendMessage(chatId, "当前无法归档这个会话，请稍后重试。");
+      await this.deps.safeSendMessage(chatId, LL.errors.archiveTemporarilyUnavailable());
       return;
     }
 
@@ -827,9 +841,10 @@ export class SessionProjectCoordinator {
   }
 
   private async handleArchiveAllSessions(chatId: string, store: BridgeStateStore): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const visibleSessions = store.listSessions(chatId, { archived: false, limit: 2_147_483_647 });
     if (visibleSessions.length === 0) {
-      await this.deps.safeSendMessage(chatId, "当前没有可归档会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noArchivableSessions());
       return;
     }
 
@@ -961,6 +976,7 @@ export class SessionProjectCoordinator {
   }
 
   async handleUnarchive(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -968,14 +984,14 @@ export class SessionProjectCoordinator {
 
     const index = Number.parseInt(args.trim(), 10);
     if (!Number.isFinite(index) || index < 1) {
-      await this.deps.safeSendMessage(chatId, "找不到这个会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.sessionNotFound());
       return;
     }
 
     const archivedSessions = store.listSessions(chatId, { archived: true, limit: 10 });
     const target = archivedSessions[index - 1];
     if (!target) {
-      await this.deps.safeSendMessage(chatId, "找不到这个会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.sessionNotFound());
       return;
     }
 
@@ -1029,11 +1045,12 @@ export class SessionProjectCoordinator {
         }
       }
 
-      await this.deps.safeSendMessage(chatId, "当前无法恢复这个会话，请稍后重试。");
+      await this.deps.safeSendMessage(chatId, LL.errors.resumeTemporarilyUnavailable());
     }
   }
 
   async handleRename(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1041,7 +1058,7 @@ export class SessionProjectCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
@@ -1077,6 +1094,7 @@ export class SessionProjectCoordinator {
   }
 
   async beginSessionRename(chatId: string, messageId: number, sessionId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1084,7 +1102,7 @@ export class SessionProjectCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || activeSession.sessionId !== sessionId || this.renameSurfaceMessageIds.get(chatId) !== messageId) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
@@ -1099,6 +1117,7 @@ export class SessionProjectCoordinator {
   }
 
   async beginProjectRename(chatId: string, messageId: number, sessionId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1106,7 +1125,7 @@ export class SessionProjectCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || activeSession.sessionId !== sessionId || this.renameSurfaceMessageIds.get(chatId) !== messageId) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
@@ -1121,6 +1140,7 @@ export class SessionProjectCoordinator {
   }
 
   async clearProjectAlias(chatId: string, messageId: number, sessionId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1128,12 +1148,12 @@ export class SessionProjectCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || activeSession.sessionId !== sessionId || this.renameSurfaceMessageIds.get(chatId) !== messageId) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return;
     }
 
     if (!activeSession.projectAlias?.trim()) {
-      await this.deps.safeSendMessage(chatId, "当前项目还没有设置别名。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noProjectAlias());
       return;
     }
 
@@ -1150,6 +1170,7 @@ export class SessionProjectCoordinator {
   }
 
   async handleRenameInput(chatId: string, text: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1176,7 +1197,7 @@ export class SessionProjectCoordinator {
     if (!session) {
       this.pendingRenameStates.delete(chatId);
       this.renameSurfaceMessageIds.delete(chatId);
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
@@ -1220,6 +1241,7 @@ export class SessionProjectCoordinator {
   }
 
   async handlePin(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1227,12 +1249,12 @@ export class SessionProjectCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     if (store.isProjectPinned(activeSession.projectPath)) {
-      await this.deps.safeSendMessage(chatId, "这个项目已经收藏。");
+      await this.deps.safeSendMessage(chatId, LL.errors.projectAlreadyStarred());
       return;
     }
 
@@ -1245,6 +1267,7 @@ export class SessionProjectCoordinator {
   }
 
   async handlePlan(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1252,18 +1275,26 @@ export class SessionProjectCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     const nextPlanMode = !activeSession.planMode;
     store.setSessionPlanMode(activeSession.sessionId, nextPlanMode);
 
-    const verb = nextPlanMode ? "开启" : "关闭";
-    const suffix = activeSession.status === "running"
-      ? "当前任务不受影响，下次任务开始时生效。"
-      : "下次任务开始时生效。";
-    await this.deps.safeSendMessage(chatId, `已为会话「${activeSession.displayName}」${verb} Plan mode。${suffix}`);
+    const verb = nextPlanMode ? LL.labels.planModeOn() : LL.labels.planModeOff();
+    const effect = activeSession.status === "running"
+      ? LL.labels.planModeNextTaskEffect()
+      : LL.labels.planModeNextTaskEffectOnly();
+    await this.deps.safeSendMessage(
+      chatId,
+      LL.success.planModeTogglePrefix() +
+        activeSession.displayName +
+        LL.success.planModeToggleMiddle() +
+        verb +
+        LL.success.planModeToggleSuffix() +
+        effect
+    );
   }
 
   private resolveBrowseRoots(): string[] {
@@ -1291,9 +1322,10 @@ export class SessionProjectCoordinator {
   }
 
   private async requireActivePickerState(chatId: string, messageId: number): Promise<PickerState | null> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const pickerState = this.pickerStates.get(chatId);
     if (!pickerState || pickerState.interactiveMessageId !== messageId) {
-      await this.deps.safeSendMessage(chatId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.buttonExpired());
       return null;
     }
 
@@ -1333,7 +1365,8 @@ export class SessionProjectCoordinator {
   }
 
   private getRenamePromptText(kind: PendingRenameState["kind"]): string {
-    return kind === "project" ? "请输入新的项目别名。\n发送 /cancel 取消。" : "请输入新的会话名称。\n发送 /cancel 取消。";
+    const LL = getTranslator(this.deps.getUiLanguage());
+    return kind === "project" ? LL.prompts.renameProject() : LL.prompts.renameSession();
   }
 
   private async editOrSendRenamePrompt(chatId: string, messageId: number, promptText: string): Promise<number> {

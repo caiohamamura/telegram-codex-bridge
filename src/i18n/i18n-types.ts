@@ -44,9 +44,17 @@ type RootTranslation = {
 		 */
 		close: string
 		/**
+		 * 返​回
+		 */
+		back: string
+		/**
 		 * 当​前
 		 */
 		current: string
+		/**
+		 * 空​槽​位
+		 */
+		emptySlot: string
 		/**
 		 * 默​认​模​型
 		 */
@@ -87,6 +95,18 @@ type RootTranslation = {
 		 * 下​一​页
 		 */
 		next: string
+		/**
+		 * 待​处​理
+		 */
+		pending: string
+		/**
+		 * 未​完​成
+		 */
+		incomplete: string
+		/**
+		 * 命​令
+		 */
+		commands: string
 	}
 	status: {
 		/**
@@ -448,6 +468,14 @@ type RootTranslation = {
 		 * 当​前
 		 */
 		current: string
+		/**
+		 * 默​认
+		 */
+		defaultAlias: string
+		/**
+		 * 默​认​模​型​ ​+​ ​默​认
+		 */
+		defaultSelectionLabel: string
 	}
 	commands: {
 		/**
@@ -886,6 +914,14 @@ type RootTranslation = {
 		 * �​�​ ​/​s​t​a​t​u​s​ ​|​ ​/​i​n​s​p​e​c​t​ ​|​ ​/​i​n​t​e​r​r​u​p​t
 		 */
 		hubFooter: string
+		/**
+		 * 确​认​中​断
+		 */
+		confirmInterruptTitle: string
+		/**
+		 * 要​停​止​当​前​正​在​运​行​的​操​作​吗​？
+		 */
+		confirmInterruptText: string
 		/**
 		 * 计​划​清​单
 		 */
@@ -1657,6 +1693,1291 @@ type RootTranslation = {
 			unknown: string
 		}
 	}
+	errors: {
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​操​作​。
+		 */
+		buttonExpired: string
+		/**
+		 * 当​前​正​在​等​待​你​处​理​交​互​卡​片​，​请​先​在​卡​片​中​回​答​或​取​消​。
+		 */
+		pendingInteractionBlockNotice: string
+		/**
+		 * 当​前​没​有​活​动​会​话​。
+		 */
+		noActiveSession: string
+		/**
+		 * 当​前​项​目​仍​在​执​行​，​请​先​等​待​完​成​或​停​止​当​前​操​作​。
+		 */
+		projectBusy: string
+		/**
+		 * 这​个​交​互​已​过​期​。
+		 */
+		interactionExpired: string
+		/**
+		 * 这​个​操​作​已​处​理​。
+		 */
+		operationHandled: string
+		/**
+		 * C​o​d​e​x​ ​服​务​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		codexUnavailable: string
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​发​送​ ​/​r​u​n​t​i​m​e​。
+		 */
+		buttonExpiredRuntime: string
+		/**
+		 * 当​前​项​目​仍​在​执​行​，​请​等​待​完​成​或​发​送​ ​/​i​n​t​e​r​r​u​p​t​。
+		 */
+		projectBusyInterrupt: string
+		/**
+		 * 找​不​到​这​个​会​话​。
+		 */
+		sessionNotFound: string
+		/**
+		 * 暂​时​无​法​处​理​这​个​交​互​，​请​稍​后​再​试​。
+		 */
+		interactionTemporarilyUnavailable: string
+		/**
+		 * 暂​时​无​法​读​取​这​张​图​片​，​请​稍​后​重​试​。
+		 */
+		imageReadFailed: string
+		/**
+		 * 当​前​平​台​正​在​限​流​，​请​稍​后​再​试​。
+		 */
+		platformRateLimited: string
+		/**
+		 * 当​前​没​有​正​在​执​行​的​操​作​。
+		 */
+		noRunningOperation: string
+		/**
+		 * 暂​时​无​法​更​新​这​条​消​息​，​请​稍​后​再​试​。
+		 */
+		messageUpdateFailed: string
+		/**
+		 * 请​先​发​送​ ​/​n​e​w​ ​选​择​项​目​。
+		 */
+		selectProjectFirst: string
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​发​送​ ​/​r​o​l​l​b​a​c​k​。
+		 */
+		buttonExpiredRollback: string
+		/**
+		 * 这​个​模​型​列​表​已​过​期​，​请​重​新​发​送​ ​/​m​o​d​e​l​。
+		 */
+		modelListExpired: string
+		/**
+		 * 找​不​到​这​个​模​型​，​请​先​发​送​ ​/​m​o​d​e​l​ ​用​按​钮​选​择​。
+		 */
+		modelNotFound: string
+		/**
+		 * 当​前​最​多​只​能​并​行​运​行​ 
+		 */
+		runningCapacityLimitPrefix: string
+		/**
+		 *  ​个​会​话​，​请​先​等​待​完​成​或​停​止​部​分​任​务​。
+		 */
+		runningCapacityLimitSuffix: string
+		/**
+		 * 找​不​到​这​个​技​能​，​请​先​发​送​ ​/​s​k​i​l​l​s​ ​查​看​当​前​项​目​的​技​能​列​表​。
+		 */
+		skillNotFound: string
+		/**
+		 * 找​不​到​这​个​插​件​，​请​先​发​送​ ​/​p​l​u​g​i​n​s​ ​查​看​当​前​可​用​列​表​。
+		 */
+		pluginNotFound: string
+		/**
+		 * 当​前​项​目​没​有​可​列​出​的​技​能​。
+		 */
+		noSkillsAvailable: string
+		/**
+		 * 当​前​项​目​没​有​可​列​出​的​插​件​。
+		 */
+		noPluginsAvailable: string
+		/**
+		 * 当​前​没​有​可​列​出​的​ ​A​p​p​s​。
+		 */
+		noAppsAvailable: string
+		/**
+		 * 当​前​没​有​可​列​出​的​ ​M​C​P​ ​服​务​器​。
+		 */
+		noMcpServers: string
+		/**
+		 * 当​前​无​法​生​成​这​个​ ​M​C​P​ ​服​务​器​的​登​录​链​接​。
+		 */
+		mcpLoginFailed: string
+		/**
+		 * 当​前​没​有​可​选​择​的​回​滚​目​标​。
+		 */
+		noRollbackTarget: string
+		/**
+		 * 这​个​回​滚​目​标​已​失​效​，​请​重​新​发​送​ ​/​r​o​l​l​b​a​c​k​。
+		 */
+		rollbackTargetExpired: string
+		/**
+		 * 当​前​会​话​还​没​有​可​压​缩​的​ ​C​o​d​e​x​ ​线​程​。
+		 */
+		noThreadToCompact: string
+		/**
+		 * 当​前​会​话​还​没​有​可​分​叉​的​ ​C​o​d​e​x​ ​线​程​，​请​先​完​成​一​次​任​务​。
+		 */
+		noThreadToFork: string
+		/**
+		 * 当​前​会​话​还​没​有​ ​C​o​d​e​x​ ​线​程​，​请​先​完​成​一​次​任​务​。
+		 */
+		noThreadYet: string
+		/**
+		 * 当​前​会​话​还​没​有​可​回​滚​的​ ​C​o​d​e​x​ ​线​程​。
+		 */
+		noThreadToRollback: string
+		/**
+		 * 当​前​没​有​可​归​档​会​话​。
+		 */
+		noArchivableSessions: string
+		/**
+		 * 当​前​无​法​归​档​这​个​会​话​，​请​稍​后​重​试​。
+		 */
+		archiveTemporarilyUnavailable: string
+		/**
+		 * 当​前​无​法​恢​复​这​个​会​话​，​请​稍​后​重​试​。
+		 */
+		resumeTemporarilyUnavailable: string
+		/**
+		 * 当​前​最​多​只​能​并​行​运​行​ 
+		 */
+		runningSessionLimitPrefix: string
+		/**
+		 *  ​个​会​话​，​请​先​等​待​完​成​或​停​止​部​分​任​务​。
+		 */
+		runningSessionLimitSuffix: string
+		/**
+		 * 当​前​项​目​还​没​有​设​置​别​名​。
+		 */
+		noProjectAlias: string
+		/**
+		 * 这​个​项​目​已​经​收​藏​。
+		 */
+		projectAlreadyStarred: string
+		/**
+		 * 当​前​没​有​可​取​消​的​输​入​。
+		 */
+		noCancellableInput: string
+		/**
+		 * 当​前​没​有​可​用​的​活​动​详​情​。
+		 */
+		noActiveDetails: string
+		/**
+		 * 这​个​ ​C​o​d​e​x​ ​会​话​已​绑​定​到​另​一​个​聊​天​。
+		 */
+		sessionBoundToAnotherChat: string
+		/**
+		 * 当​前​没​有​可​浏​览​的​根​目​录​。
+		 */
+		noBrowsableRoot: string
+		/**
+		 * 这​个​目​录​不​可​用​，​请​重​新​发​送​目​录​路​径​。​
+	​也​可​以​发​送​ ​/​c​a​n​c​e​l​ ​返​回​项​目​列​表​。
+		 */
+		directoryUnavailable: string
+		/**
+		 * 桥​接​状​态​未​知​，​请​在​本​机​运​行​ ​c​t​b​ ​d​o​c​t​o​r​。
+		 */
+		bridgeStateUnknown: string
+		/**
+		 * 找​不​到​这​个​ ​C​o​d​e​x​ ​会​话​。
+		 */
+		codexSessionNotFound: string
+		/**
+		 * 只​支​持​ ​/​a​r​c​h​i​v​e​ ​或​ ​/​a​r​c​h​i​v​e​ ​a​l​l​。
+		 */
+		archiveOnlyOrAll: string
+		/**
+		 * 暂​时​无​法​关​闭​这​条​消​息​，​请​稍​后​再​试​。
+		 */
+		closeMessageFailed: string
+		/**
+		 * 状​态​存​储​当​前​不​可​用​。
+		 */
+		stateStoreUnavailable: string
+		/**
+		 * 暂​时​无​法​打​开​命​令​面​板​，​请​稍​后​重​试​。
+		 */
+		commandPanelOpenFailed: string
+		/**
+		 * 暂​时​无​法​打​开​编​辑​器​，​请​稍​后​重​试​。
+		 */
+		editorOpenFailed: string
+		/**
+		 * 暂​时​无​法​更​新​编​辑​器​，​请​稍​后​重​试​。
+		 */
+		editorUpdateFailed: string
+		/**
+		 * 暂​时​无​法​关​闭​编​辑​器​，​请​稍​后​重​试​。
+		 */
+		editorCloseFailed: string
+		/**
+		 * 这​个​指​令​当​前​不​能​加​入​快​捷​指​令​。
+		 */
+		commandNotAddable: string
+		/**
+		 * 最​多​只​能​保​留​ ​8​ ​个​快​捷​指​令​。
+		 */
+		commandShortcutLimit: string
+		/**
+		 * 至​少​保​留​ ​1​ ​个​快​捷​指​令​。
+		 */
+		commandShortcutMinimum: string
+		/**
+		 * 这​个​入​口​已​下​线​。​请​直​接​告​诉​ ​C​o​d​e​x​ ​发​送​图​片​。
+		 */
+		offlineEntryImage: string
+		/**
+		 * 这​个​入​口​已​下​线​。​请​直​接​告​诉​ ​C​o​d​e​x​ ​发​送​文​件​。
+		 */
+		offlineEntryFile: string
+		/**
+		 * 当​前​没​有​运​行​中​的​会​话​。
+		 */
+		noRunningSessions: string
+		/**
+		 * 当​前​有​待​处​理​的​交​互​，​请​先​完​成​当​前​操​作​。
+		 */
+		pendingInteractionExists: string
+		/**
+		 * 当​前​无​法​中​断​正​在​运​行​的​操​作​。
+		 */
+		interruptUnavailable: string
+		/**
+		 * 当​前​无​法​中​断​这​个​会​话​的​操​作​。
+		 */
+		interruptUnavailableForSession: string
+		/**
+		 * 这​次​操​作​未​成​功​完​成​，​请​重​试​。
+		 */
+		operationIncomplete: string
+		/**
+		 * 本​次​操​作​已​完​成​，​但​没​有​可​返​回​的​最​终​答​复​。
+		 */
+		noFinalResponse: string
+		/**
+		 * 这​个​本​地​图​片​路​径​不​可​用​，​请​确​认​文​件​存​在​且​是​常​见​图​片​格​式​。
+		 */
+		localImageInvalid: string
+		/**
+		 * 当​前​无​法​把​附​件​ 
+		 */
+		attachmentConversionFailedPrefix: string
+		/**
+		 *  ​转​成​ ​C​o​d​e​x​ ​可​读​输​入​。
+		 */
+		attachmentConversionFailedSuffix: string
+		/**
+		 * 最​近​附​件​暂​时​无​法​自​动​转​成​ ​C​o​d​e​x​ ​可​读​输​入​，​请​改​用​支​持​文​本​提​取​的​文​件​，​或​稍​后​再​试​。
+		 */
+		attachmentAutoConversionFailed: string
+		/**
+		 * 未​启​用​语​音​输​入​。
+		 */
+		voiceNotEnabled: string
+		/**
+		 * 暂​时​无​法​读​取​这​段​语​音​，​请​稍​后​重​试​。
+		 */
+		voiceReadFailed: string
+		/**
+		 * 暂​时​无​法​处​理​这​段​语​音​，​请​稍​后​重​试​。
+		 */
+		voiceProcessingFailed: string
+		/**
+		 * 这​条​语​音​对​应​的​会​话​已​不​可​用​，​请​重​新​选​择​会​话​后​再​试​。
+		 */
+		voiceSessionUnavailable: string
+		/**
+		 * 语​音​已​转​写​，​但​对​应​会​话​已​不​可​用​，​请​重​新​发​送​。
+		 */
+		voiceTranscribedSessionUnavailable: string
+		/**
+		 * O​p​e​n​A​I​ ​语​音​转​写​失​败​，​正​在​尝​试​ ​r​e​a​l​t​i​m​e​ ​兜​底​。
+		 */
+		voiceTranscriptionFailedRealtimeFallback: string
+		/**
+		 * 当​前​ ​C​o​d​e​x​ ​模​型​不​支​持​ ​r​e​a​l​t​i​m​e​ ​音​频​输​入​。
+		 */
+		realtimeAudioNotSupported: string
+		/**
+		 * 系​统​里​找​不​到​ ​f​f​m​p​e​g​：
+		 */
+		ffmpegNotFoundPrefix: string
+		/**
+		 * 当​前​会​话​已​经​变​化​，​请​重​新​发​送​结​构​化​输​入​。
+		 */
+		sessionChanged: string
+		/**
+		 * 用​法​：​/​s​k​i​l​l​ ​<​技​能​名​>​ ​:​:​ ​任​务​说​明
+		 */
+		skillUsageHint: string
+		/**
+		 * 用​法​：​/​p​l​u​g​i​n​ ​i​n​s​t​a​l​l​ ​<​市​场​>​/​<​插​件​名​>
+		 */
+		pluginInstallUsage: string
+		/**
+		 * 用​法​：​/​p​l​u​g​i​n​ ​u​n​i​n​s​t​a​l​l​ ​<​插​件​I​D​>
+		 */
+		pluginUninstallUsage: string
+		/**
+		 * 用​法​：​/​p​l​u​g​i​n​ ​i​n​s​t​a​l​l​ ​<​市​场​>​/​<​插​件​名​>​ ​或​ ​/​p​l​u​g​i​n​ ​u​n​i​n​s​t​a​l​l​ ​<​插​件​I​D​>
+		 */
+		pluginUsage: string
+		/**
+		 * 用​法​：​/​m​c​p​、​/​m​c​p​ ​r​e​l​o​a​d​ ​或​ ​/​m​c​p​ ​l​o​g​i​n​ ​<​名​称​>
+		 */
+		mcpUsage: string
+		/**
+		 * 用​法​：​/​m​c​p​ ​l​o​g​i​n​ ​<​名​称​>
+		 */
+		mcpLoginUsage: string
+		/**
+		 * 用​法​：​/​r​e​v​i​e​w​ ​[​d​e​t​a​c​h​e​d​]​ ​[​b​r​a​n​c​h​ ​<​分​支​>​|​c​o​m​m​i​t​ ​<​S​H​A​>​|​c​u​s​t​o​m​ ​<​说​明​>​]
+		 */
+		reviewUsage: string
+		/**
+		 * 用​法​：​/​r​o​l​l​b​a​c​k​ ​或​ ​/​r​o​l​l​b​a​c​k​ ​<​回​滚​的​ ​t​u​r​n​ ​数​量​>
+		 */
+		rollbackUsage: string
+		/**
+		 * 用​法​：​/​t​h​r​e​a​d​ ​n​a​m​e​ ​<​名​称​>​ ​或​ ​/​t​h​r​e​a​d​ ​m​e​t​a​ ​b​r​a​n​c​h​=​<​分​支​>​ ​s​h​a​=​<​提​交​>​ ​o​r​i​g​i​n​=​<​U​R​L​>​ ​或​ ​/​t​h​r​e​a​d​ ​c​l​e​a​n​-​t​e​r​m​i​n​a​l​s
+		 */
+		threadUsage: string
+		/**
+		 * 用​法​：​/​t​h​r​e​a​d​ ​n​a​m​e​ ​<​名​称​>
+		 */
+		threadNameUsage: string
+		/**
+		 * 用​法​：​/​t​h​r​e​a​d​ ​m​e​t​a​ ​b​r​a​n​c​h​=​<​分​支​>​ ​s​h​a​=​<​提​交​>​ ​o​r​i​g​i​n​=​<​U​R​L​>
+		 */
+		threadMetaUsage: string
+		/**
+		 * 用​法​：​/​m​e​n​t​i​o​n​ ​<​p​a​t​h​>​ ​:​:​ ​任​务​说​明
+		 */
+		mentionUsage: string
+		/**
+		 * 用​法​：​/​a​t​t​a​c​h​ ​<​附​件​I​D​>​ ​:​:​ ​任​务​说​明
+		 */
+		attachUsage: string
+		/**
+		 * 用​法​：​/​l​o​c​a​l​_​i​m​a​g​e​ ​<​图​片​路​径​>​ ​:​:​ ​任​务​说​明
+		 */
+		localImageUsage: string
+		/**
+		 * 这​个​问​题​只​能​用​按​钮​回​答​。
+		 */
+		buttonsOnly: string
+		/**
+		 * 请​先​切​换​到​这​个​会​话​，​再​发​送​文​字​回​答​。
+		 */
+		switchSessionBeforeTextReply: string
+		/**
+		 * 这​个​操​作​当​前​不​支​持​。
+		 */
+		operationNotSupported: string
+		/**
+		 * 这​个​问​题​不​能​跳​过​。
+		 */
+		cannotSkip: string
+		/**
+		 * 请​输​入​有​效​数​字​。
+		 */
+		invalidNumber: string
+		/**
+		 * 请​输​入​整​数​。
+		 */
+		integerRequired: string
+		/**
+		 * 请​输​入​ ​t​r​u​e​/​f​a​l​s​e​ ​或​ ​是​/​否​。
+		 */
+		booleanFormat: string
+		/**
+		 * 请​至​少​输​入​一​个​值​。
+		 */
+		atLeastOneValue: string
+		/**
+		 * 请​先​输​入​至​少​一​个​值​，​或​点​击​跳​过​。
+		 */
+		atLeastOneValueOrSkip: string
+		/**
+		 * 回​答​不​能​为​空​。
+		 */
+		answerRequired: string
+		/**
+		 * 输​入​值​不​合​法​。
+		 */
+		invalidValue: string
+		/**
+		 * 可​用​值​：
+		 */
+		allowedValuesPrefix: string
+		/**
+		 * 。
+		 */
+		allowedValuesSuffix: string
+		/**
+		 * 当​前​没​有​活​动​会​话​，​请​先​发​送​ ​/​n​e​w​ ​或​ ​/​u​s​e​ ​进​入​项​目​。
+		 */
+		browserNoSession: string
+		/**
+		 * 当​前​项​目​目​录​不​可​用​，​请​重​新​选​择​项​目​后​再​试​。
+		 */
+		browserUnavailableProject: string
+		/**
+		 * 当​前​浏​览​根​目​录​不​可​用​，​请​重​新​发​送​ ​/​n​e​w​ ​后​重​试​。
+		 */
+		browserUnavailableRoot: string
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​发​送​ ​/​b​r​o​w​s​e​。
+		 */
+		browserExpired: string
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​发​送​ ​/​n​e​w​ ​后​再​浏​览​。
+		 */
+		browserExpiredPreSession: string
+		/**
+		 * 当​前​无​法​更​新​这​个​浏​览​消​息​，​请​重​新​发​送​ ​/​b​r​o​w​s​e​。
+		 */
+		browserUpdateFailed: string
+		/**
+		 * P​h​a​s​e​ ​1​ ​暂​不​支​持​浏​览​符​号​链​接​。
+		 */
+		browserSymlinkUnsupported: string
+		/**
+		 * 当​前​目​录​不​可​用​，​请​重​新​发​送​ ​/​n​e​w​ ​后​重​试​。
+		 */
+		browserCreateSessionUnavailable: string
+		/**
+		 * 暂​时​无​法​读​取​这​个​文​件​，​请​稍​后​重​试​。
+		 */
+		browserFileInfoFailed: string
+		/**
+		 * 当​前​无​法​关​闭​这​个​浏​览​消​息​。
+		 */
+		browserCloseFailed: string
+		/**
+		 * 暂​时​无​法​发​送​这​张​图​片​预​览​，​请​稍​后​重​试​。
+		 */
+		browserImagePreviewFailed: string
+		/**
+		 * 模​型​操​作​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		modelOperationUnavailable: string
+		/**
+		 * 技​能​列​表​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		skillsListUnavailable: string
+		/**
+		 * 结​构​化​ ​s​k​i​l​l​ ​输​入​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		structuredSkillInputUnavailable: string
+		/**
+		 * 插​件​列​表​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		extensionsListUnavailable: string
+		/**
+		 * 当​前​无​法​管​理​插​件​，​请​稍​后​重​试​。
+		 */
+		manageExtensionsUnavailable: string
+		/**
+		 * 当​前​无​法​读​取​ ​A​p​p​s​ ​列​表​，​请​稍​后​重​试​。
+		 */
+		appsListUnavailable: string
+		/**
+		 * 当​前​无​法​读​取​ ​M​C​P​ ​状​态​，​请​稍​后​重​试​。
+		 */
+		mcpStatusUnavailable: string
+		/**
+		 * 当​前​无​法​读​取​账​号​状​态​，​请​稍​后​重​试​。
+		 */
+		accountStatusUnavailable: string
+		/**
+		 * 当​前​无​法​启​动​审​查​，​请​稍​后​重​试​。
+		 */
+		reviewUnavailable: string
+		/**
+		 * 当​前​无​法​分​叉​这​个​会​话​，​请​稍​后​重​试​。
+		 */
+		forkSessionUnavailable: string
+		/**
+		 * 当​前​无​法​回​滚​这​个​会​话​，​请​稍​后​重​试​。
+		 */
+		rollbackSessionUnavailable: string
+		/**
+		 * 当​前​无​法​清​空​这​个​会​话​的​上​下​文​，​请​稍​后​重​试​。
+		 */
+		clearContextUnavailable: string
+		/**
+		 * 当​前​无​法​压​缩​这​个​线​程​，​请​稍​后​重​试​。
+		 */
+		compactThreadUnavailable: string
+		/**
+		 * 本​地​图​片​输​入​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		localImageInputUnavailable: string
+		/**
+		 * 结​构​化​引​用​输​入​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		structuredReferenceInputUnavailable: string
+		/**
+		 * 附​件​引​用​暂​时​不​可​用​，​请​稍​后​重​试​。
+		 */
+		attachmentReferenceUnavailable: string
+		/**
+		 * 当​前​无​法​更​新​线​程​设​置​，​请​稍​后​重​试​。
+		 */
+		threadSettingsUnavailable: string
+		/**
+		 * 当​前​无​法​恢​复​ ​C​o​d​e​x​ ​会​话​，​请​稍​后​重​试​。
+		 */
+		resumeSessionUnavailable: string
+		/**
+		 * 当​前​无​法​开​始​实​施​，​请​稍​后​重​试​。
+		 */
+		implementationUnavailable: string
+		/**
+		 * 这​台​服​务​器​还​没​有​绑​定
+		 */
+		serverNotBoundPrefix: string
+		/**
+		 * 账​号​，​请​等​待​管​理​员​在​本​机​确​认​。
+		 */
+		serverNotBoundSuffix: string
+		/**
+		 * 这​个
+		 */
+		unauthorizedAccountPrefix: string
+		/**
+		 * 账​号​无​权​访​问​此​服​务​器​上​的​ ​C​o​d​e​x​。
+		 */
+		unauthorizedAccountSuffix: string
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​打​开​编​辑​器​。
+		 */
+		buttonExpiredReopenEditor: string
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​打​开​命​令​面​板​。
+		 */
+		buttonExpiredReopenPanel: string
+		/**
+		 * 这​个​按​钮​已​过​期​，​请​重​新​发​送​ ​/​i​n​s​p​e​c​t​。
+		 */
+		buttonExpiredInspect: string
+		/**
+		 * 已​保​存​，​但​暂​时​无​法​刷​新​命​令​面​板​。
+		 */
+		saveRefreshFailed: string
+		/**
+		 * 暂​时​无​法​关​闭​这​条​消​息​，​请​稍​后​再​试​。
+		 */
+		messageCloseFailed: string
+		/**
+		 * 详​情​过​长​，​已​改​为​纯​文​本​发​送​。
+		 */
+		detailsSentAsText: string
+		/**
+		 * 暂​时​无​法​更​新​详​情​，​请​稍​后​重​试​。
+		 */
+		detailsUpdateFailed: string
+		/**
+		 * 语​音​输​入​失​败​：
+		 */
+		voiceInputFailedPrefix: string
+		/**
+		 * 找​不​到​附​件​：
+		 */
+		attachmentNotFoundPrefix: string
+		/**
+		 * 以​下​附​件​未​能​完​成​解​析​：​
+
+		 */
+		attachmentsParseFailedPrefix: string
+	}
+	success: {
+		/**
+		 * 已​请​求​停​止​当​前​操​作​。
+		 */
+		stopRequested: string
+		/**
+		 * 已​请​求​停​止​这​个​会​话​的​当​前​操​作​。
+		 */
+		stopRequestedForSession: string
+		/**
+		 * 已​切​换​到​会​话​：
+		 */
+		sessionSwitchedPrefix: string
+		/**
+		 * 已​保​存​。
+		 */
+		settingsSaved: string
+		/**
+		 * 设​置​已​保​存​，​但​消​息​暂​时​无​法​更​新​。
+		 */
+		settingsSavedButMessageUpdateFailed: string
+		/**
+		 * 已​恢​复​默​认​，​记​得​保​存​。
+		 */
+		defaultsRestored: string
+		/**
+		 * 已​清​空​会​话​「
+		 */
+		threadClearedPrefix: string
+		/**
+		 * 」​的​上​下​文​，​并​立​即​切​换​到​新​的​ ​C​o​d​e​x​ ​线​程​。​上​一​线​程​已​保​留​到​归​档​会​话​中​，​可​用​ ​/​s​e​s​s​i​o​n​s​ ​a​r​c​h​i​v​e​d​ ​查​看​。
+		 */
+		threadClearedSuffix: string
+		/**
+		 * 已​重​置​会​话​「
+		 */
+		threadResetPrefix: string
+		/**
+		 * 」​并​立​即​启​动​新​的​ ​C​o​d​e​x​ ​线​程​。
+		 */
+		threadResetSuffix: string
+		/**
+		 * 会​话​标​题​已​更​新​为​：
+		 */
+		threadNameUpdatedPrefix: string
+		/**
+		 * 已​为​会​话​「
+		 */
+		threadMetaUpdatedPrefix: string
+		/**
+		 * 」​更​新​线​程​元​数​据​：
+		 */
+		threadMetaUpdatedSuffix: string
+		/**
+		 * 已​为​会​话​「
+		 */
+		terminalsCleanedPrefix: string
+		/**
+		 * 」​清​理​当​前​线​程​的​后​台​终​端​。
+		 */
+		terminalsCleanedSuffix: string
+		/**
+		 * 已​为​会​话​「
+		 */
+		modelSetPrefix: string
+		/**
+		 * 」​设​置​模​型​：
+		 */
+		modelSetSuffix: string
+		/**
+		 * 
+	​下​次​任​务​开​始​时​生​效​。
+		 */
+		modelSetEffect: string
+		/**
+		 * 已​为​会​话​「
+		 */
+		planModeToggledPrefix: string
+		/**
+		 * 」
+		 */
+		planModeToggledSuffix: string
+		/**
+		 *  ​P​l​a​n​ ​m​o​d​e​。
+		 */
+		planModeToggledPlan: string
+		/**
+		 * 已​创​建​审​查​会​话​：
+		 */
+		reviewSessionCreatedPrefix: string
+		/**
+		 * 已​创​建​分​叉​会​话​：
+		 */
+		forkSessionCreatedPrefix: string
+		/**
+		 * 已​为​会​话​「
+		 */
+		compactRequestedPrefix: string
+		/**
+		 * 」​请​求​压​缩​当​前​线​程​。
+		 */
+		compactRequestedSuffix: string
+		/**
+		 * 已​回​滚​到​：
+		 */
+		rollbackCompletedPrefix: string
+		/**
+		 * 已​为​会​话​「
+		 */
+		rollbackTurnsPrefix: string
+		/**
+		 * 」​回​滚​最​近​ 
+		 */
+		rollbackTurnsMiddle: string
+		/**
+		 *  ​个​ ​t​u​r​n​。
+		 */
+		rollbackTurnsSuffix: string
+		/**
+		 * 已​回​滚​最​近​ 
+		 */
+		rollbackTurnsNoSessionPrefix: string
+		/**
+		 *  ​个​ ​t​u​r​n​。
+		 */
+		rollbackTurnsNoSessionSuffix: string
+		/**
+		 * 已​为​项​目​「
+		 */
+		pluginInstalledPrefix: string
+		/**
+		 * 」​安​装​插​件​：
+		 */
+		pluginInstalledMiddle: string
+		/**
+		 * 已​为​项​目​「
+		 */
+		pluginUninstalledPrefix: string
+		/**
+		 * 」​卸​载​插​件​：
+		 */
+		pluginUninstalledMiddle: string
+		/**
+		 * 已​重​新​加​载​ ​M​C​P​ ​服​务​器​配​置​。
+		 */
+		mcpReloaded: string
+		/**
+		 * 已​生​成​ ​M​C​P​ ​登​录​链​接​：
+		 */
+		mcpLoginLinkPrefix: string
+		/**
+		 * 
+
+		 */
+		mcpLoginLinkMiddle: string
+		/**
+		 * 
+	​完​成​后​重​新​发​送​ ​/​m​c​p​ ​查​看​最​新​状​态​。
+		 */
+		mcpLoginLinkSuffix: string
+		/**
+		 * 已​为​会​话​「
+		 */
+		planModeTogglePrefix: string
+		/**
+		 * 」
+		 */
+		planModeToggleMiddle: string
+		/**
+		 *  ​P​l​a​n​ ​m​o​d​e​。
+		 */
+		planModeToggleSuffix: string
+		/**
+		 * 已​取​消​项​目​别​名​修​改​。
+		 */
+		renameProjectCancelled: string
+		/**
+		 * 已​取​消​会​话​重​命​名​。
+		 */
+		renameSessionCancelled: string
+		/**
+		 * 已​发​送​图​片​预​览​。
+		 */
+		imagePreviewSent: string
+		/**
+		 * 已​取​消​待​发​送​的​结​构​化​输​入​。
+		 */
+		structuredInputCancelled: string
+		/**
+		 * 已​收​到​语​音​，
+		 */
+		voiceReceivedPrefix: string
+		/**
+		 * 正​在​转​写​。
+		 */
+		voiceTranscribing: string
+		/**
+		 * 正​在​排​队​转​写​。​前​方​还​有​ 
+		 */
+		voiceQueuedPrefix: string
+		/**
+		 *  ​条​语​音​。
+		 */
+		voiceQueuedSuffix: string
+	}
+	hints: {
+		/**
+		 * 如​需​查​看​或​刷​新​ ​H​u​b​，​可​发​送​ ​/​h​u​b​。
+		 */
+		hubCommandReminder: string
+		/**
+		 * 需​要​查​看​运​行​卡​片​时​，​可​发​送​ ​/​h​u​b​。
+		 */
+		hubCommandReminderShort: string
+		/**
+		 * 请​先​用​ ​/​n​e​w​ ​选​择​项​目​，​或​用​ ​/​r​e​s​u​m​e​ ​a​l​l​ ​查​看​全​部​ ​C​o​d​e​x​ ​会​话​。
+		 */
+		selectProjectOrResume: string
+		/**
+		 * 已​记​录
+		 */
+		recordedContinueOrCancelPrefix: string
+		/**
+		 * ，​请​继​续​发​送​任​务​说​明​，​或​发​送​ ​/​c​a​n​c​e​l​ ​取​消​。
+		 */
+		recordedContinueOrCancelSuffix: string
+	}
+	prompts: {
+		/**
+		 * 请​输​入​新​的​项​目​别​名​。​
+	​发​送​ ​/​c​a​n​c​e​l​ ​取​消​。
+		 */
+		renameProject: string
+		/**
+		 * 请​输​入​新​的​会​话​名​称​。​
+	​发​送​ ​/​c​a​n​c​e​l​ ​取​消​。
+		 */
+		renameSession: string
+		/**
+		 * 请​继​续​发​送​要​和
+		 */
+		continueStructuredInputPrefix: string
+		/**
+		 * 一​起​交​给​ ​C​o​d​e​x​ ​的​说​明​。
+		 */
+		continueStructuredInputSuffix: string
+	}
+	labels: {
+		/**
+		 * [​启​用​]
+		 */
+		enabled: string
+		/**
+		 * [​禁​用​]
+		 */
+		disabled: string
+		/**
+		 * [​已​安​装​]
+		 */
+		installed: string
+		/**
+		 * [​未​安​装​]
+		 */
+		notInstalled: string
+		/**
+		 * [​可​访​问​]
+		 */
+		accessible: string
+		/**
+		 * [​不​可​访​问​]
+		 */
+		notAccessible: string
+		/**
+		 * 可​用​技​能
+		 */
+		availableSkills: string
+		/**
+		 * 可​用​插​件
+		 */
+		availablePlugins: string
+		/**
+		 * 当​前​可​用​ ​A​p​p​s
+		 */
+		availableApps: string
+		/**
+		 * 市​场​：
+		 */
+		marketplacePrefix: string
+		/**
+		 * 来​源​插​件​：
+		 */
+		sourcePluginPrefix: string
+		/**
+		 * 安​装​地​址​：
+		 */
+		installUrlPrefix: string
+		/**
+		 * M​C​P​ ​服​务​器​状​态
+		 */
+		mcpServerStatus: string
+		/**
+		 * 工​具​ 
+		 */
+		mcpToolsPrefix: string
+		/**
+		 * 资​源​ 
+		 */
+		mcpResourcesPrefix: string
+		/**
+		 * 模​板​ 
+		 */
+		mcpTemplatesPrefix: string
+		/**
+		 * 当​前​ ​C​o​d​e​x​ ​账​号
+		 */
+		currentCodexAccount: string
+		/**
+		 * 账​号​：​未​登​录
+		 */
+		accountNotLoggedIn: string
+		/**
+		 * 类​型​：​A​P​I​ ​K​e​y
+		 */
+		accountTypeApiKey: string
+		/**
+		 * 类​型​：​C​h​a​t​G​P​T
+		 */
+		accountTypeChatGPT: string
+		/**
+		 * 邮​箱​：
+		 */
+		accountEmailPrefix: string
+		/**
+		 * 计​划​：
+		 */
+		accountPlanPrefix: string
+		/**
+		 * 需​要​ ​O​p​e​n​A​I​ ​A​u​t​h
+		 */
+		requiresOpenaiAuth: string
+		/**
+		 * 是
+		 */
+		requiresOpenaiAuthYes: string
+		/**
+		 * 否
+		 */
+		requiresOpenaiAuthNo: string
+		/**
+		 * 额​度​：
+		 */
+		rateLimitQuotaPrefix: string
+		/**
+		 * 限​额​计​划​：
+		 */
+		rateLimitPlanPrefix: string
+		/**
+		 *  ​分​钟
+		 */
+		rateLimitWindowMinutesSuffix: string
+		/**
+		 * 当​前​窗​口
+		 */
+		rateLimitWindowCurrent: string
+		/**
+		 * 主​额​度​使​用​：
+		 */
+		rateLimitPrimaryUsagePrefix: string
+		/**
+		 * %​（
+		 */
+		rateLimitPrimaryUsageMiddle: string
+		/**
+		 * ）
+		 */
+		rateLimitPrimaryUsageSuffix: string
+		/**
+		 * C​r​e​d​i​t​s​：
+		 */
+		creditsPrefix: string
+		/**
+		 * C​r​e​d​i​t​s​：​无​限
+		 */
+		creditsUnlimited: string
+		/**
+		 * 可​用
+		 */
+		creditsAvailable: string
+		/**
+		 * 不​可​用
+		 */
+		creditsUnavailable: string
+		/**
+		 * s​k​i​l​l​：
+		 */
+		skillLabelPrefix: string
+		/**
+		 * 语​音​：
+		 */
+		voiceInputPrefix: string
+		/**
+		 * 图​片​输​入
+		 */
+		imageInput: string
+		/**
+		 * 结​构​化​输​入
+		 */
+		structuredInput: string
+		/**
+		 * 引​用​：
+		 */
+		referencePrefix: string
+		/**
+		 * 本​地​图​片​：
+		 */
+		localImagePrefix: string
+		/**
+		 * 附​件​：
+		 */
+		attachmentPrefix: string
+		/**
+		 *  ​张​图​片
+		 */
+		multipleImagesSuffix: string
+		/**
+		 * 图​片
+		 */
+		image: string
+		/**
+		 * 清​空​前​：
+		 */
+		preClearPrefix: string
+		/**
+		 * 扫​描​警​告​：
+		 */
+		scanWarningPrefix: string
+		/**
+		 * 使​用​ ​/​s​k​i​l​l​ ​<​技​能​名​>​ ​:​:​ ​任​务​说​明​ ​将​ ​s​k​i​l​l​ ​作​为​结​构​化​输​入​发​送​给​ ​C​o​d​e​x​。
+		 */
+		skillUsage: string
+		/**
+		 * 使​用​ ​/​p​l​u​g​i​n​ ​i​n​s​t​a​l​l​ ​<​市​场​>​/​<​插​件​名​>​ ​安​装​插​件​。
+		 */
+		pluginInstallUsage: string
+		/**
+		 * 使​用​ ​/​p​l​u​g​i​n​ ​u​n​i​n​s​t​a​l​l​ ​<​插​件​I​D​>​ ​卸​载​插​件​。
+		 */
+		pluginUninstallUsage: string
+		/**
+		 * 例​如​：​/​p​l​u​g​i​n​ ​i​n​s​t​a​l​l​ 
+		 */
+		pluginInstallExamplePrefix: string
+		/**
+		 * 使​用​ ​/​m​c​p​ ​r​e​l​o​a​d​ ​重​新​加​载​配​置​，​或​ ​/​m​c​p​ ​l​o​g​i​n​ ​<​名​称​>​ ​启​动​ ​O​A​u​t​h​ ​登​录​。
+		 */
+		mcpUsage: string
+		/**
+		 * 上​一​级
+		 */
+		parentDirectory: string
+		/**
+		 * 在​当​前​目​录​新​建
+		 */
+		createSessionHere: string
+		/**
+		 * 刷​新
+		 */
+		refresh: string
+		/**
+		 * M​C​P​ ​工​具
+		 */
+		mcpTool: string
+		/**
+		 * 当​前​会​话​：
+		 */
+		currentSessionPrefix: string
+		/**
+		 * 当​前​项​目​：
+		 */
+		currentProjectPrefix: string
+		/**
+		 * 开​启
+		 */
+		planModeOn: string
+		/**
+		 * 关​闭
+		 */
+		planModeOff: string
+		/**
+		 * 当​前​任​务​不​受​影​响​，​下​次​任​务​开​始​时​生​效​。
+		 */
+		planModeNextTaskEffect: string
+		/**
+		 * 下​次​任​务​开​始​时​生​效​。
+		 */
+		planModeNextTaskEffectOnly: string
+		/**
+		 * 语​音​转​写​：
+		 */
+		voiceTranscriptionPrefix: string
+		/**
+		 * 请​逐​字​转​写​收​到​的​语​音​，​只​返​回​转​写​文​本​，​不​要​解​释​。
+		 */
+		voiceRealtimeTranscriptionPrompt: string
+		/**
+		 * 已​接​收​文​件​附​件​：​
+
+		 */
+		attachmentReceivedSinglePrefix: string
+		/**
+		 * 
+	​下​一​条​消​息​会​自​动​带​上​最​近​附​件​；​也​可​用​ ​/​a​t​t​a​c​h​ ​<​附​件​I​D​>​ ​:​:​ ​任​务​说​明​；​发​送​ ​/​c​a​n​c​e​l​ ​可​取​消​。
+		 */
+		attachmentReceivedSingleSuffix: string
+		/**
+		 * 已​接​收​ 
+		 */
+		attachmentReceivedMultiplePrefix: string
+		/**
+		 *  ​个​文​件​附​件​：​
+
+		 */
+		attachmentReceivedMultipleMiddle: string
+		/**
+		 * 
+	​下​一​条​消​息​会​自​动​带​上​最​近​附​件​；​也​可​用​ ​/​a​t​t​a​c​h​ ​<​附​件​I​D​>​ ​:​:​ ​任​务​说​明​；​发​送​ ​/​c​a​n​c​e​l​ ​可​取​消​。
+		 */
+		attachmentReceivedMultipleSuffix: string
+		/**
+		 * 以​下​是​附​件​《
+		 */
+		attachmentExtractContentPrefix: string
+		/**
+		 * 》​的​提​取​内​容​：​
+	​
+
+		 */
+		attachmentExtractContentMiddle: string
+		/**
+		 * 以​下​是​附​件​《
+		 */
+		attachmentExtractContentTruncatedPrefix: string
+		/**
+		 * 》​的​提​取​内​容​（​已​截​断​）​：​
+	​
+
+		 */
+		attachmentExtractContentTruncatedMiddle: string
+	}
+	statuses: {
+		/**
+		 * 已​完​成
+		 */
+		completed: string
+		/**
+		 * 失​败
+		 */
+		failed: string
+		/**
+		 * 已​中​断
+		 */
+		interrupted: string
+		/**
+		 * 空​闲
+		 */
+		idle: string
+		/**
+		 * 执​行​中
+		 */
+		running: string
+		/**
+		 * 不​支​持​认​证
+		 */
+		authNotSupported: string
+		/**
+		 * 未​登​录
+		 */
+		notLoggedIn: string
+		/**
+		 * 上​次​运​行​因​桥​重​启​而​停​止
+		 */
+		stoppedByBridgeRestart: string
+	}
+	notices: {
+		/**
+		 * C​o​d​e​x​ ​配​置​警​告​：
+		 */
+		configWarningPrefix: string
+		/**
+		 * C​o​d​e​x​ ​弃​用​提​示​：
+		 */
+		deprecationWarningPrefix: string
+		/**
+		 * C​o​d​e​x​ ​已​调​整​模​型​：
+		 */
+		modelAdjustedPrefix: string
+		/**
+		 *  ​-​>​ 
+		 */
+		modelAdjustedArrow: string
+		/**
+		 *  ​(
+		 */
+		modelAdjustedReasonPrefix: string
+		/**
+		 * )
+		 */
+		modelAdjustedReasonSuffix: string
+		/**
+		 * C​o​d​e​x​ ​技​能​列​表​已​刷​新​。
+		 */
+		skillsRefreshed: string
+		/**
+		 * C​o​d​e​x​ ​线​程​上​下​文​已​压​缩​。
+		 */
+		threadCompacted: string
+	}
+	help: {
+		/**
+		 * 用​法​：​/​r​e​v​i​e​w​ ​[​d​e​t​a​c​h​e​d​]​ ​[​b​r​a​n​c​h​ ​<​分​支​>​|​c​o​m​m​i​t​ ​<​S​H​A​>​|​c​u​s​t​o​m​ ​<​说​明​>​]
+		 */
+		reviewUsage: string
+		/**
+		 * 用​法​：​/​t​h​r​e​a​d​ ​n​a​m​e​ ​<​名​称​>​ ​或​ ​/​t​h​r​e​a​d​ ​m​e​t​a​ ​b​r​a​n​c​h​=​<​分​支​>​ ​s​h​a​=​<​提​交​>​ ​o​r​i​g​i​n​=​<​U​R​L​>​ ​或​ ​/​t​h​r​e​a​d​ ​c​l​e​a​n​-​t​e​r​m​i​n​a​l​s
+		 */
+		threadUsage: string
+	}
+	warnings: {
+		/**
+		 * 注​意​：​这​不​会​自​动​撤​销​代​理​已​经​写​到​本​地​文​件​的​改​动​。
+		 */
+		rollbackNoAutoRevert: string
+		/**
+		 * 这​些​ ​A​p​p​ ​可​能​还​需​要​额​外​授​权​：
+		 */
+		appsNeedAuthorization: string
+		/**
+		 * 扫​描​警​告​：
+		 */
+		scanErrorPrefix: string
+	}
+	input: {
+		/**
+		 * 是
+		 */
+		yes: string
+		/**
+		 * 否
+		 */
+		no: string
+	}
+	feishu: {
+		/**
+		 * 帮​助
+		 */
+		help: string
+		/**
+		 * 新​建​会​话
+		 */
+		newSession: string
+		/**
+		 * 当​前​状​态
+		 */
+		status: string
+		/**
+		 * 最​近​会​话
+		 */
+		sessions: string
+		/**
+		 * 中​断​操​作
+		 */
+		interrupt: string
+		/**
+		 * 查​看​详​情
+		 */
+		inspect: string
+		/**
+		 * 运​行​卡
+		 */
+		hub: string
+	}
 }
 
 export type TranslationFunctions = {
@@ -1690,9 +3011,17 @@ export type TranslationFunctions = {
 		 */
 		close: () => LocalizedString
 		/**
+		 * 返回
+		 */
+		back: () => LocalizedString
+		/**
 		 * 当前
 		 */
 		current: () => LocalizedString
+		/**
+		 * 空槽位
+		 */
+		emptySlot: () => LocalizedString
 		/**
 		 * 默认模型
 		 */
@@ -1733,6 +3062,18 @@ export type TranslationFunctions = {
 		 * 下一页
 		 */
 		next: () => LocalizedString
+		/**
+		 * 待处理
+		 */
+		pending: () => LocalizedString
+		/**
+		 * 未完成
+		 */
+		incomplete: () => LocalizedString
+		/**
+		 * 命令
+		 */
+		commands: () => LocalizedString
 	}
 	status: {
 		/**
@@ -2094,6 +3435,14 @@ export type TranslationFunctions = {
 		 * 当前
 		 */
 		current: () => LocalizedString
+		/**
+		 * 默认
+		 */
+		defaultAlias: () => LocalizedString
+		/**
+		 * 默认模型 + 默认
+		 */
+		defaultSelectionLabel: () => LocalizedString
 	}
 	commands: {
 		/**
@@ -2532,6 +3881,14 @@ export type TranslationFunctions = {
 		 * 💡 /status | /inspect | /interrupt
 		 */
 		hubFooter: () => LocalizedString
+		/**
+		 * 确认中断
+		 */
+		confirmInterruptTitle: () => LocalizedString
+		/**
+		 * 要停止当前正在运行的操作吗？
+		 */
+		confirmInterruptText: () => LocalizedString
 		/**
 		 * 计划清单
 		 */
@@ -3302,6 +4659,1291 @@ export type TranslationFunctions = {
 			 */
 			unknown: () => LocalizedString
 		}
+	}
+	errors: {
+		/**
+		 * 这个按钮已过期，请重新操作。
+		 */
+		buttonExpired: () => LocalizedString
+		/**
+		 * 当前正在等待你处理交互卡片，请先在卡片中回答或取消。
+		 */
+		pendingInteractionBlockNotice: () => LocalizedString
+		/**
+		 * 当前没有活动会话。
+		 */
+		noActiveSession: () => LocalizedString
+		/**
+		 * 当前项目仍在执行，请先等待完成或停止当前操作。
+		 */
+		projectBusy: () => LocalizedString
+		/**
+		 * 这个交互已过期。
+		 */
+		interactionExpired: () => LocalizedString
+		/**
+		 * 这个操作已处理。
+		 */
+		operationHandled: () => LocalizedString
+		/**
+		 * Codex 服务暂时不可用，请稍后重试。
+		 */
+		codexUnavailable: () => LocalizedString
+		/**
+		 * 这个按钮已过期，请重新发送 /runtime。
+		 */
+		buttonExpiredRuntime: () => LocalizedString
+		/**
+		 * 当前项目仍在执行，请等待完成或发送 /interrupt。
+		 */
+		projectBusyInterrupt: () => LocalizedString
+		/**
+		 * 找不到这个会话。
+		 */
+		sessionNotFound: () => LocalizedString
+		/**
+		 * 暂时无法处理这个交互，请稍后再试。
+		 */
+		interactionTemporarilyUnavailable: () => LocalizedString
+		/**
+		 * 暂时无法读取这张图片，请稍后重试。
+		 */
+		imageReadFailed: () => LocalizedString
+		/**
+		 * 当前平台正在限流，请稍后再试。
+		 */
+		platformRateLimited: () => LocalizedString
+		/**
+		 * 当前没有正在执行的操作。
+		 */
+		noRunningOperation: () => LocalizedString
+		/**
+		 * 暂时无法更新这条消息，请稍后再试。
+		 */
+		messageUpdateFailed: () => LocalizedString
+		/**
+		 * 请先发送 /new 选择项目。
+		 */
+		selectProjectFirst: () => LocalizedString
+		/**
+		 * 这个按钮已过期，请重新发送 /rollback。
+		 */
+		buttonExpiredRollback: () => LocalizedString
+		/**
+		 * 这个模型列表已过期，请重新发送 /model。
+		 */
+		modelListExpired: () => LocalizedString
+		/**
+		 * 找不到这个模型，请先发送 /model 用按钮选择。
+		 */
+		modelNotFound: () => LocalizedString
+		/**
+		 * 当前最多只能并行运行 
+		 */
+		runningCapacityLimitPrefix: () => LocalizedString
+		/**
+		 *  个会话，请先等待完成或停止部分任务。
+		 */
+		runningCapacityLimitSuffix: () => LocalizedString
+		/**
+		 * 找不到这个技能，请先发送 /skills 查看当前项目的技能列表。
+		 */
+		skillNotFound: () => LocalizedString
+		/**
+		 * 找不到这个插件，请先发送 /plugins 查看当前可用列表。
+		 */
+		pluginNotFound: () => LocalizedString
+		/**
+		 * 当前项目没有可列出的技能。
+		 */
+		noSkillsAvailable: () => LocalizedString
+		/**
+		 * 当前项目没有可列出的插件。
+		 */
+		noPluginsAvailable: () => LocalizedString
+		/**
+		 * 当前没有可列出的 Apps。
+		 */
+		noAppsAvailable: () => LocalizedString
+		/**
+		 * 当前没有可列出的 MCP 服务器。
+		 */
+		noMcpServers: () => LocalizedString
+		/**
+		 * 当前无法生成这个 MCP 服务器的登录链接。
+		 */
+		mcpLoginFailed: () => LocalizedString
+		/**
+		 * 当前没有可选择的回滚目标。
+		 */
+		noRollbackTarget: () => LocalizedString
+		/**
+		 * 这个回滚目标已失效，请重新发送 /rollback。
+		 */
+		rollbackTargetExpired: () => LocalizedString
+		/**
+		 * 当前会话还没有可压缩的 Codex 线程。
+		 */
+		noThreadToCompact: () => LocalizedString
+		/**
+		 * 当前会话还没有可分叉的 Codex 线程，请先完成一次任务。
+		 */
+		noThreadToFork: () => LocalizedString
+		/**
+		 * 当前会话还没有 Codex 线程，请先完成一次任务。
+		 */
+		noThreadYet: () => LocalizedString
+		/**
+		 * 当前会话还没有可回滚的 Codex 线程。
+		 */
+		noThreadToRollback: () => LocalizedString
+		/**
+		 * 当前没有可归档会话。
+		 */
+		noArchivableSessions: () => LocalizedString
+		/**
+		 * 当前无法归档这个会话，请稍后重试。
+		 */
+		archiveTemporarilyUnavailable: () => LocalizedString
+		/**
+		 * 当前无法恢复这个会话，请稍后重试。
+		 */
+		resumeTemporarilyUnavailable: () => LocalizedString
+		/**
+		 * 当前最多只能并行运行 
+		 */
+		runningSessionLimitPrefix: () => LocalizedString
+		/**
+		 *  个会话，请先等待完成或停止部分任务。
+		 */
+		runningSessionLimitSuffix: () => LocalizedString
+		/**
+		 * 当前项目还没有设置别名。
+		 */
+		noProjectAlias: () => LocalizedString
+		/**
+		 * 这个项目已经收藏。
+		 */
+		projectAlreadyStarred: () => LocalizedString
+		/**
+		 * 当前没有可取消的输入。
+		 */
+		noCancellableInput: () => LocalizedString
+		/**
+		 * 当前没有可用的活动详情。
+		 */
+		noActiveDetails: () => LocalizedString
+		/**
+		 * 这个 Codex 会话已绑定到另一个聊天。
+		 */
+		sessionBoundToAnotherChat: () => LocalizedString
+		/**
+		 * 当前没有可浏览的根目录。
+		 */
+		noBrowsableRoot: () => LocalizedString
+		/**
+		 * 这个目录不可用，请重新发送目录路径。
+	也可以发送 /cancel 返回项目列表。
+		 */
+		directoryUnavailable: () => LocalizedString
+		/**
+		 * 桥接状态未知，请在本机运行 ctb doctor。
+		 */
+		bridgeStateUnknown: () => LocalizedString
+		/**
+		 * 找不到这个 Codex 会话。
+		 */
+		codexSessionNotFound: () => LocalizedString
+		/**
+		 * 只支持 /archive 或 /archive all。
+		 */
+		archiveOnlyOrAll: () => LocalizedString
+		/**
+		 * 暂时无法关闭这条消息，请稍后再试。
+		 */
+		closeMessageFailed: () => LocalizedString
+		/**
+		 * 状态存储当前不可用。
+		 */
+		stateStoreUnavailable: () => LocalizedString
+		/**
+		 * 暂时无法打开命令面板，请稍后重试。
+		 */
+		commandPanelOpenFailed: () => LocalizedString
+		/**
+		 * 暂时无法打开编辑器，请稍后重试。
+		 */
+		editorOpenFailed: () => LocalizedString
+		/**
+		 * 暂时无法更新编辑器，请稍后重试。
+		 */
+		editorUpdateFailed: () => LocalizedString
+		/**
+		 * 暂时无法关闭编辑器，请稍后重试。
+		 */
+		editorCloseFailed: () => LocalizedString
+		/**
+		 * 这个指令当前不能加入快捷指令。
+		 */
+		commandNotAddable: () => LocalizedString
+		/**
+		 * 最多只能保留 8 个快捷指令。
+		 */
+		commandShortcutLimit: () => LocalizedString
+		/**
+		 * 至少保留 1 个快捷指令。
+		 */
+		commandShortcutMinimum: () => LocalizedString
+		/**
+		 * 这个入口已下线。请直接告诉 Codex 发送图片。
+		 */
+		offlineEntryImage: () => LocalizedString
+		/**
+		 * 这个入口已下线。请直接告诉 Codex 发送文件。
+		 */
+		offlineEntryFile: () => LocalizedString
+		/**
+		 * 当前没有运行中的会话。
+		 */
+		noRunningSessions: () => LocalizedString
+		/**
+		 * 当前有待处理的交互，请先完成当前操作。
+		 */
+		pendingInteractionExists: () => LocalizedString
+		/**
+		 * 当前无法中断正在运行的操作。
+		 */
+		interruptUnavailable: () => LocalizedString
+		/**
+		 * 当前无法中断这个会话的操作。
+		 */
+		interruptUnavailableForSession: () => LocalizedString
+		/**
+		 * 这次操作未成功完成，请重试。
+		 */
+		operationIncomplete: () => LocalizedString
+		/**
+		 * 本次操作已完成，但没有可返回的最终答复。
+		 */
+		noFinalResponse: () => LocalizedString
+		/**
+		 * 这个本地图片路径不可用，请确认文件存在且是常见图片格式。
+		 */
+		localImageInvalid: () => LocalizedString
+		/**
+		 * 当前无法把附件 
+		 */
+		attachmentConversionFailedPrefix: () => LocalizedString
+		/**
+		 *  转成 Codex 可读输入。
+		 */
+		attachmentConversionFailedSuffix: () => LocalizedString
+		/**
+		 * 最近附件暂时无法自动转成 Codex 可读输入，请改用支持文本提取的文件，或稍后再试。
+		 */
+		attachmentAutoConversionFailed: () => LocalizedString
+		/**
+		 * 未启用语音输入。
+		 */
+		voiceNotEnabled: () => LocalizedString
+		/**
+		 * 暂时无法读取这段语音，请稍后重试。
+		 */
+		voiceReadFailed: () => LocalizedString
+		/**
+		 * 暂时无法处理这段语音，请稍后重试。
+		 */
+		voiceProcessingFailed: () => LocalizedString
+		/**
+		 * 这条语音对应的会话已不可用，请重新选择会话后再试。
+		 */
+		voiceSessionUnavailable: () => LocalizedString
+		/**
+		 * 语音已转写，但对应会话已不可用，请重新发送。
+		 */
+		voiceTranscribedSessionUnavailable: () => LocalizedString
+		/**
+		 * OpenAI 语音转写失败，正在尝试 realtime 兜底。
+		 */
+		voiceTranscriptionFailedRealtimeFallback: () => LocalizedString
+		/**
+		 * 当前 Codex 模型不支持 realtime 音频输入。
+		 */
+		realtimeAudioNotSupported: () => LocalizedString
+		/**
+		 * 系统里找不到 ffmpeg：
+		 */
+		ffmpegNotFoundPrefix: () => LocalizedString
+		/**
+		 * 当前会话已经变化，请重新发送结构化输入。
+		 */
+		sessionChanged: () => LocalizedString
+		/**
+		 * 用法：/skill <技能名> :: 任务说明
+		 */
+		skillUsageHint: () => LocalizedString
+		/**
+		 * 用法：/plugin install <市场>/<插件名>
+		 */
+		pluginInstallUsage: () => LocalizedString
+		/**
+		 * 用法：/plugin uninstall <插件ID>
+		 */
+		pluginUninstallUsage: () => LocalizedString
+		/**
+		 * 用法：/plugin install <市场>/<插件名> 或 /plugin uninstall <插件ID>
+		 */
+		pluginUsage: () => LocalizedString
+		/**
+		 * 用法：/mcp、/mcp reload 或 /mcp login <名称>
+		 */
+		mcpUsage: () => LocalizedString
+		/**
+		 * 用法：/mcp login <名称>
+		 */
+		mcpLoginUsage: () => LocalizedString
+		/**
+		 * 用法：/review [detached] [branch <分支>|commit <SHA>|custom <说明>]
+		 */
+		reviewUsage: () => LocalizedString
+		/**
+		 * 用法：/rollback 或 /rollback <回滚的 turn 数量>
+		 */
+		rollbackUsage: () => LocalizedString
+		/**
+		 * 用法：/thread name <名称> 或 /thread meta branch=<分支> sha=<提交> origin=<URL> 或 /thread clean-terminals
+		 */
+		threadUsage: () => LocalizedString
+		/**
+		 * 用法：/thread name <名称>
+		 */
+		threadNameUsage: () => LocalizedString
+		/**
+		 * 用法：/thread meta branch=<分支> sha=<提交> origin=<URL>
+		 */
+		threadMetaUsage: () => LocalizedString
+		/**
+		 * 用法：/mention <path> :: 任务说明
+		 */
+		mentionUsage: () => LocalizedString
+		/**
+		 * 用法：/attach <附件ID> :: 任务说明
+		 */
+		attachUsage: () => LocalizedString
+		/**
+		 * 用法：/local_image <图片路径> :: 任务说明
+		 */
+		localImageUsage: () => LocalizedString
+		/**
+		 * 这个问题只能用按钮回答。
+		 */
+		buttonsOnly: () => LocalizedString
+		/**
+		 * 请先切换到这个会话，再发送文字回答。
+		 */
+		switchSessionBeforeTextReply: () => LocalizedString
+		/**
+		 * 这个操作当前不支持。
+		 */
+		operationNotSupported: () => LocalizedString
+		/**
+		 * 这个问题不能跳过。
+		 */
+		cannotSkip: () => LocalizedString
+		/**
+		 * 请输入有效数字。
+		 */
+		invalidNumber: () => LocalizedString
+		/**
+		 * 请输入整数。
+		 */
+		integerRequired: () => LocalizedString
+		/**
+		 * 请输入 true/false 或 是/否。
+		 */
+		booleanFormat: () => LocalizedString
+		/**
+		 * 请至少输入一个值。
+		 */
+		atLeastOneValue: () => LocalizedString
+		/**
+		 * 请先输入至少一个值，或点击跳过。
+		 */
+		atLeastOneValueOrSkip: () => LocalizedString
+		/**
+		 * 回答不能为空。
+		 */
+		answerRequired: () => LocalizedString
+		/**
+		 * 输入值不合法。
+		 */
+		invalidValue: () => LocalizedString
+		/**
+		 * 可用值：
+		 */
+		allowedValuesPrefix: () => LocalizedString
+		/**
+		 * 。
+		 */
+		allowedValuesSuffix: () => LocalizedString
+		/**
+		 * 当前没有活动会话，请先发送 /new 或 /use 进入项目。
+		 */
+		browserNoSession: () => LocalizedString
+		/**
+		 * 当前项目目录不可用，请重新选择项目后再试。
+		 */
+		browserUnavailableProject: () => LocalizedString
+		/**
+		 * 当前浏览根目录不可用，请重新发送 /new 后重试。
+		 */
+		browserUnavailableRoot: () => LocalizedString
+		/**
+		 * 这个按钮已过期，请重新发送 /browse。
+		 */
+		browserExpired: () => LocalizedString
+		/**
+		 * 这个按钮已过期，请重新发送 /new 后再浏览。
+		 */
+		browserExpiredPreSession: () => LocalizedString
+		/**
+		 * 当前无法更新这个浏览消息，请重新发送 /browse。
+		 */
+		browserUpdateFailed: () => LocalizedString
+		/**
+		 * Phase 1 暂不支持浏览符号链接。
+		 */
+		browserSymlinkUnsupported: () => LocalizedString
+		/**
+		 * 当前目录不可用，请重新发送 /new 后重试。
+		 */
+		browserCreateSessionUnavailable: () => LocalizedString
+		/**
+		 * 暂时无法读取这个文件，请稍后重试。
+		 */
+		browserFileInfoFailed: () => LocalizedString
+		/**
+		 * 当前无法关闭这个浏览消息。
+		 */
+		browserCloseFailed: () => LocalizedString
+		/**
+		 * 暂时无法发送这张图片预览，请稍后重试。
+		 */
+		browserImagePreviewFailed: () => LocalizedString
+		/**
+		 * 模型操作暂时不可用，请稍后重试。
+		 */
+		modelOperationUnavailable: () => LocalizedString
+		/**
+		 * 技能列表暂时不可用，请稍后重试。
+		 */
+		skillsListUnavailable: () => LocalizedString
+		/**
+		 * 结构化 skill 输入暂时不可用，请稍后重试。
+		 */
+		structuredSkillInputUnavailable: () => LocalizedString
+		/**
+		 * 插件列表暂时不可用，请稍后重试。
+		 */
+		extensionsListUnavailable: () => LocalizedString
+		/**
+		 * 当前无法管理插件，请稍后重试。
+		 */
+		manageExtensionsUnavailable: () => LocalizedString
+		/**
+		 * 当前无法读取 Apps 列表，请稍后重试。
+		 */
+		appsListUnavailable: () => LocalizedString
+		/**
+		 * 当前无法读取 MCP 状态，请稍后重试。
+		 */
+		mcpStatusUnavailable: () => LocalizedString
+		/**
+		 * 当前无法读取账号状态，请稍后重试。
+		 */
+		accountStatusUnavailable: () => LocalizedString
+		/**
+		 * 当前无法启动审查，请稍后重试。
+		 */
+		reviewUnavailable: () => LocalizedString
+		/**
+		 * 当前无法分叉这个会话，请稍后重试。
+		 */
+		forkSessionUnavailable: () => LocalizedString
+		/**
+		 * 当前无法回滚这个会话，请稍后重试。
+		 */
+		rollbackSessionUnavailable: () => LocalizedString
+		/**
+		 * 当前无法清空这个会话的上下文，请稍后重试。
+		 */
+		clearContextUnavailable: () => LocalizedString
+		/**
+		 * 当前无法压缩这个线程，请稍后重试。
+		 */
+		compactThreadUnavailable: () => LocalizedString
+		/**
+		 * 本地图片输入暂时不可用，请稍后重试。
+		 */
+		localImageInputUnavailable: () => LocalizedString
+		/**
+		 * 结构化引用输入暂时不可用，请稍后重试。
+		 */
+		structuredReferenceInputUnavailable: () => LocalizedString
+		/**
+		 * 附件引用暂时不可用，请稍后重试。
+		 */
+		attachmentReferenceUnavailable: () => LocalizedString
+		/**
+		 * 当前无法更新线程设置，请稍后重试。
+		 */
+		threadSettingsUnavailable: () => LocalizedString
+		/**
+		 * 当前无法恢复 Codex 会话，请稍后重试。
+		 */
+		resumeSessionUnavailable: () => LocalizedString
+		/**
+		 * 当前无法开始实施，请稍后重试。
+		 */
+		implementationUnavailable: () => LocalizedString
+		/**
+		 * 这台服务器还没有绑定
+		 */
+		serverNotBoundPrefix: () => LocalizedString
+		/**
+		 * 账号，请等待管理员在本机确认。
+		 */
+		serverNotBoundSuffix: () => LocalizedString
+		/**
+		 * 这个
+		 */
+		unauthorizedAccountPrefix: () => LocalizedString
+		/**
+		 * 账号无权访问此服务器上的 Codex。
+		 */
+		unauthorizedAccountSuffix: () => LocalizedString
+		/**
+		 * 这个按钮已过期，请重新打开编辑器。
+		 */
+		buttonExpiredReopenEditor: () => LocalizedString
+		/**
+		 * 这个按钮已过期，请重新打开命令面板。
+		 */
+		buttonExpiredReopenPanel: () => LocalizedString
+		/**
+		 * 这个按钮已过期，请重新发送 /inspect。
+		 */
+		buttonExpiredInspect: () => LocalizedString
+		/**
+		 * 已保存，但暂时无法刷新命令面板。
+		 */
+		saveRefreshFailed: () => LocalizedString
+		/**
+		 * 暂时无法关闭这条消息，请稍后再试。
+		 */
+		messageCloseFailed: () => LocalizedString
+		/**
+		 * 详情过长，已改为纯文本发送。
+		 */
+		detailsSentAsText: () => LocalizedString
+		/**
+		 * 暂时无法更新详情，请稍后重试。
+		 */
+		detailsUpdateFailed: () => LocalizedString
+		/**
+		 * 语音输入失败：
+		 */
+		voiceInputFailedPrefix: () => LocalizedString
+		/**
+		 * 找不到附件：
+		 */
+		attachmentNotFoundPrefix: () => LocalizedString
+		/**
+		 * 以下附件未能完成解析：
+
+		 */
+		attachmentsParseFailedPrefix: () => LocalizedString
+	}
+	success: {
+		/**
+		 * 已请求停止当前操作。
+		 */
+		stopRequested: () => LocalizedString
+		/**
+		 * 已请求停止这个会话的当前操作。
+		 */
+		stopRequestedForSession: () => LocalizedString
+		/**
+		 * 已切换到会话：
+		 */
+		sessionSwitchedPrefix: () => LocalizedString
+		/**
+		 * 已保存。
+		 */
+		settingsSaved: () => LocalizedString
+		/**
+		 * 设置已保存，但消息暂时无法更新。
+		 */
+		settingsSavedButMessageUpdateFailed: () => LocalizedString
+		/**
+		 * 已恢复默认，记得保存。
+		 */
+		defaultsRestored: () => LocalizedString
+		/**
+		 * 已清空会话「
+		 */
+		threadClearedPrefix: () => LocalizedString
+		/**
+		 * 」的上下文，并立即切换到新的 Codex 线程。上一线程已保留到归档会话中，可用 /sessions archived 查看。
+		 */
+		threadClearedSuffix: () => LocalizedString
+		/**
+		 * 已重置会话「
+		 */
+		threadResetPrefix: () => LocalizedString
+		/**
+		 * 」并立即启动新的 Codex 线程。
+		 */
+		threadResetSuffix: () => LocalizedString
+		/**
+		 * 会话标题已更新为：
+		 */
+		threadNameUpdatedPrefix: () => LocalizedString
+		/**
+		 * 已为会话「
+		 */
+		threadMetaUpdatedPrefix: () => LocalizedString
+		/**
+		 * 」更新线程元数据：
+		 */
+		threadMetaUpdatedSuffix: () => LocalizedString
+		/**
+		 * 已为会话「
+		 */
+		terminalsCleanedPrefix: () => LocalizedString
+		/**
+		 * 」清理当前线程的后台终端。
+		 */
+		terminalsCleanedSuffix: () => LocalizedString
+		/**
+		 * 已为会话「
+		 */
+		modelSetPrefix: () => LocalizedString
+		/**
+		 * 」设置模型：
+		 */
+		modelSetSuffix: () => LocalizedString
+		/**
+		 * 
+	下次任务开始时生效。
+		 */
+		modelSetEffect: () => LocalizedString
+		/**
+		 * 已为会话「
+		 */
+		planModeToggledPrefix: () => LocalizedString
+		/**
+		 * 」
+		 */
+		planModeToggledSuffix: () => LocalizedString
+		/**
+		 *  Plan mode。
+		 */
+		planModeToggledPlan: () => LocalizedString
+		/**
+		 * 已创建审查会话：
+		 */
+		reviewSessionCreatedPrefix: () => LocalizedString
+		/**
+		 * 已创建分叉会话：
+		 */
+		forkSessionCreatedPrefix: () => LocalizedString
+		/**
+		 * 已为会话「
+		 */
+		compactRequestedPrefix: () => LocalizedString
+		/**
+		 * 」请求压缩当前线程。
+		 */
+		compactRequestedSuffix: () => LocalizedString
+		/**
+		 * 已回滚到：
+		 */
+		rollbackCompletedPrefix: () => LocalizedString
+		/**
+		 * 已为会话「
+		 */
+		rollbackTurnsPrefix: () => LocalizedString
+		/**
+		 * 」回滚最近 
+		 */
+		rollbackTurnsMiddle: () => LocalizedString
+		/**
+		 *  个 turn。
+		 */
+		rollbackTurnsSuffix: () => LocalizedString
+		/**
+		 * 已回滚最近 
+		 */
+		rollbackTurnsNoSessionPrefix: () => LocalizedString
+		/**
+		 *  个 turn。
+		 */
+		rollbackTurnsNoSessionSuffix: () => LocalizedString
+		/**
+		 * 已为项目「
+		 */
+		pluginInstalledPrefix: () => LocalizedString
+		/**
+		 * 」安装插件：
+		 */
+		pluginInstalledMiddle: () => LocalizedString
+		/**
+		 * 已为项目「
+		 */
+		pluginUninstalledPrefix: () => LocalizedString
+		/**
+		 * 」卸载插件：
+		 */
+		pluginUninstalledMiddle: () => LocalizedString
+		/**
+		 * 已重新加载 MCP 服务器配置。
+		 */
+		mcpReloaded: () => LocalizedString
+		/**
+		 * 已生成 MCP 登录链接：
+		 */
+		mcpLoginLinkPrefix: () => LocalizedString
+		/**
+		 * 
+
+		 */
+		mcpLoginLinkMiddle: () => LocalizedString
+		/**
+		 * 
+	完成后重新发送 /mcp 查看最新状态。
+		 */
+		mcpLoginLinkSuffix: () => LocalizedString
+		/**
+		 * 已为会话「
+		 */
+		planModeTogglePrefix: () => LocalizedString
+		/**
+		 * 」
+		 */
+		planModeToggleMiddle: () => LocalizedString
+		/**
+		 *  Plan mode。
+		 */
+		planModeToggleSuffix: () => LocalizedString
+		/**
+		 * 已取消项目别名修改。
+		 */
+		renameProjectCancelled: () => LocalizedString
+		/**
+		 * 已取消会话重命名。
+		 */
+		renameSessionCancelled: () => LocalizedString
+		/**
+		 * 已发送图片预览。
+		 */
+		imagePreviewSent: () => LocalizedString
+		/**
+		 * 已取消待发送的结构化输入。
+		 */
+		structuredInputCancelled: () => LocalizedString
+		/**
+		 * 已收到语音，
+		 */
+		voiceReceivedPrefix: () => LocalizedString
+		/**
+		 * 正在转写。
+		 */
+		voiceTranscribing: () => LocalizedString
+		/**
+		 * 正在排队转写。前方还有 
+		 */
+		voiceQueuedPrefix: () => LocalizedString
+		/**
+		 *  条语音。
+		 */
+		voiceQueuedSuffix: () => LocalizedString
+	}
+	hints: {
+		/**
+		 * 如需查看或刷新 Hub，可发送 /hub。
+		 */
+		hubCommandReminder: () => LocalizedString
+		/**
+		 * 需要查看运行卡片时，可发送 /hub。
+		 */
+		hubCommandReminderShort: () => LocalizedString
+		/**
+		 * 请先用 /new 选择项目，或用 /resume all 查看全部 Codex 会话。
+		 */
+		selectProjectOrResume: () => LocalizedString
+		/**
+		 * 已记录
+		 */
+		recordedContinueOrCancelPrefix: () => LocalizedString
+		/**
+		 * ，请继续发送任务说明，或发送 /cancel 取消。
+		 */
+		recordedContinueOrCancelSuffix: () => LocalizedString
+	}
+	prompts: {
+		/**
+		 * 请输入新的项目别名。
+	发送 /cancel 取消。
+		 */
+		renameProject: () => LocalizedString
+		/**
+		 * 请输入新的会话名称。
+	发送 /cancel 取消。
+		 */
+		renameSession: () => LocalizedString
+		/**
+		 * 请继续发送要和
+		 */
+		continueStructuredInputPrefix: () => LocalizedString
+		/**
+		 * 一起交给 Codex 的说明。
+		 */
+		continueStructuredInputSuffix: () => LocalizedString
+	}
+	labels: {
+		/**
+		 * [启用]
+		 */
+		enabled: () => LocalizedString
+		/**
+		 * [禁用]
+		 */
+		disabled: () => LocalizedString
+		/**
+		 * [已安装]
+		 */
+		installed: () => LocalizedString
+		/**
+		 * [未安装]
+		 */
+		notInstalled: () => LocalizedString
+		/**
+		 * [可访问]
+		 */
+		accessible: () => LocalizedString
+		/**
+		 * [不可访问]
+		 */
+		notAccessible: () => LocalizedString
+		/**
+		 * 可用技能
+		 */
+		availableSkills: () => LocalizedString
+		/**
+		 * 可用插件
+		 */
+		availablePlugins: () => LocalizedString
+		/**
+		 * 当前可用 Apps
+		 */
+		availableApps: () => LocalizedString
+		/**
+		 * 市场：
+		 */
+		marketplacePrefix: () => LocalizedString
+		/**
+		 * 来源插件：
+		 */
+		sourcePluginPrefix: () => LocalizedString
+		/**
+		 * 安装地址：
+		 */
+		installUrlPrefix: () => LocalizedString
+		/**
+		 * MCP 服务器状态
+		 */
+		mcpServerStatus: () => LocalizedString
+		/**
+		 * 工具 
+		 */
+		mcpToolsPrefix: () => LocalizedString
+		/**
+		 * 资源 
+		 */
+		mcpResourcesPrefix: () => LocalizedString
+		/**
+		 * 模板 
+		 */
+		mcpTemplatesPrefix: () => LocalizedString
+		/**
+		 * 当前 Codex 账号
+		 */
+		currentCodexAccount: () => LocalizedString
+		/**
+		 * 账号：未登录
+		 */
+		accountNotLoggedIn: () => LocalizedString
+		/**
+		 * 类型：API Key
+		 */
+		accountTypeApiKey: () => LocalizedString
+		/**
+		 * 类型：ChatGPT
+		 */
+		accountTypeChatGPT: () => LocalizedString
+		/**
+		 * 邮箱：
+		 */
+		accountEmailPrefix: () => LocalizedString
+		/**
+		 * 计划：
+		 */
+		accountPlanPrefix: () => LocalizedString
+		/**
+		 * 需要 OpenAI Auth
+		 */
+		requiresOpenaiAuth: () => LocalizedString
+		/**
+		 * 是
+		 */
+		requiresOpenaiAuthYes: () => LocalizedString
+		/**
+		 * 否
+		 */
+		requiresOpenaiAuthNo: () => LocalizedString
+		/**
+		 * 额度：
+		 */
+		rateLimitQuotaPrefix: () => LocalizedString
+		/**
+		 * 限额计划：
+		 */
+		rateLimitPlanPrefix: () => LocalizedString
+		/**
+		 *  分钟
+		 */
+		rateLimitWindowMinutesSuffix: () => LocalizedString
+		/**
+		 * 当前窗口
+		 */
+		rateLimitWindowCurrent: () => LocalizedString
+		/**
+		 * 主额度使用：
+		 */
+		rateLimitPrimaryUsagePrefix: () => LocalizedString
+		/**
+		 * %（
+		 */
+		rateLimitPrimaryUsageMiddle: () => LocalizedString
+		/**
+		 * ）
+		 */
+		rateLimitPrimaryUsageSuffix: () => LocalizedString
+		/**
+		 * Credits：
+		 */
+		creditsPrefix: () => LocalizedString
+		/**
+		 * Credits：无限
+		 */
+		creditsUnlimited: () => LocalizedString
+		/**
+		 * 可用
+		 */
+		creditsAvailable: () => LocalizedString
+		/**
+		 * 不可用
+		 */
+		creditsUnavailable: () => LocalizedString
+		/**
+		 * skill：
+		 */
+		skillLabelPrefix: () => LocalizedString
+		/**
+		 * 语音：
+		 */
+		voiceInputPrefix: () => LocalizedString
+		/**
+		 * 图片输入
+		 */
+		imageInput: () => LocalizedString
+		/**
+		 * 结构化输入
+		 */
+		structuredInput: () => LocalizedString
+		/**
+		 * 引用：
+		 */
+		referencePrefix: () => LocalizedString
+		/**
+		 * 本地图片：
+		 */
+		localImagePrefix: () => LocalizedString
+		/**
+		 * 附件：
+		 */
+		attachmentPrefix: () => LocalizedString
+		/**
+		 *  张图片
+		 */
+		multipleImagesSuffix: () => LocalizedString
+		/**
+		 * 图片
+		 */
+		image: () => LocalizedString
+		/**
+		 * 清空前：
+		 */
+		preClearPrefix: () => LocalizedString
+		/**
+		 * 扫描警告：
+		 */
+		scanWarningPrefix: () => LocalizedString
+		/**
+		 * 使用 /skill <技能名> :: 任务说明 将 skill 作为结构化输入发送给 Codex。
+		 */
+		skillUsage: () => LocalizedString
+		/**
+		 * 使用 /plugin install <市场>/<插件名> 安装插件。
+		 */
+		pluginInstallUsage: () => LocalizedString
+		/**
+		 * 使用 /plugin uninstall <插件ID> 卸载插件。
+		 */
+		pluginUninstallUsage: () => LocalizedString
+		/**
+		 * 例如：/plugin install 
+		 */
+		pluginInstallExamplePrefix: () => LocalizedString
+		/**
+		 * 使用 /mcp reload 重新加载配置，或 /mcp login <名称> 启动 OAuth 登录。
+		 */
+		mcpUsage: () => LocalizedString
+		/**
+		 * 上一级
+		 */
+		parentDirectory: () => LocalizedString
+		/**
+		 * 在当前目录新建
+		 */
+		createSessionHere: () => LocalizedString
+		/**
+		 * 刷新
+		 */
+		refresh: () => LocalizedString
+		/**
+		 * MCP 工具
+		 */
+		mcpTool: () => LocalizedString
+		/**
+		 * 当前会话：
+		 */
+		currentSessionPrefix: () => LocalizedString
+		/**
+		 * 当前项目：
+		 */
+		currentProjectPrefix: () => LocalizedString
+		/**
+		 * 开启
+		 */
+		planModeOn: () => LocalizedString
+		/**
+		 * 关闭
+		 */
+		planModeOff: () => LocalizedString
+		/**
+		 * 当前任务不受影响，下次任务开始时生效。
+		 */
+		planModeNextTaskEffect: () => LocalizedString
+		/**
+		 * 下次任务开始时生效。
+		 */
+		planModeNextTaskEffectOnly: () => LocalizedString
+		/**
+		 * 语音转写：
+		 */
+		voiceTranscriptionPrefix: () => LocalizedString
+		/**
+		 * 请逐字转写收到的语音，只返回转写文本，不要解释。
+		 */
+		voiceRealtimeTranscriptionPrompt: () => LocalizedString
+		/**
+		 * 已接收文件附件：
+
+		 */
+		attachmentReceivedSinglePrefix: () => LocalizedString
+		/**
+		 * 
+	下一条消息会自动带上最近附件；也可用 /attach <附件ID> :: 任务说明；发送 /cancel 可取消。
+		 */
+		attachmentReceivedSingleSuffix: () => LocalizedString
+		/**
+		 * 已接收 
+		 */
+		attachmentReceivedMultiplePrefix: () => LocalizedString
+		/**
+		 *  个文件附件：
+
+		 */
+		attachmentReceivedMultipleMiddle: () => LocalizedString
+		/**
+		 * 
+	下一条消息会自动带上最近附件；也可用 /attach <附件ID> :: 任务说明；发送 /cancel 可取消。
+		 */
+		attachmentReceivedMultipleSuffix: () => LocalizedString
+		/**
+		 * 以下是附件《
+		 */
+		attachmentExtractContentPrefix: () => LocalizedString
+		/**
+		 * 》的提取内容：
+
+
+		 */
+		attachmentExtractContentMiddle: () => LocalizedString
+		/**
+		 * 以下是附件《
+		 */
+		attachmentExtractContentTruncatedPrefix: () => LocalizedString
+		/**
+		 * 》的提取内容（已截断）：
+
+
+		 */
+		attachmentExtractContentTruncatedMiddle: () => LocalizedString
+	}
+	statuses: {
+		/**
+		 * 已完成
+		 */
+		completed: () => LocalizedString
+		/**
+		 * 失败
+		 */
+		failed: () => LocalizedString
+		/**
+		 * 已中断
+		 */
+		interrupted: () => LocalizedString
+		/**
+		 * 空闲
+		 */
+		idle: () => LocalizedString
+		/**
+		 * 执行中
+		 */
+		running: () => LocalizedString
+		/**
+		 * 不支持认证
+		 */
+		authNotSupported: () => LocalizedString
+		/**
+		 * 未登录
+		 */
+		notLoggedIn: () => LocalizedString
+		/**
+		 * 上次运行因桥重启而停止
+		 */
+		stoppedByBridgeRestart: () => LocalizedString
+	}
+	notices: {
+		/**
+		 * Codex 配置警告：
+		 */
+		configWarningPrefix: () => LocalizedString
+		/**
+		 * Codex 弃用提示：
+		 */
+		deprecationWarningPrefix: () => LocalizedString
+		/**
+		 * Codex 已调整模型：
+		 */
+		modelAdjustedPrefix: () => LocalizedString
+		/**
+		 *  -> 
+		 */
+		modelAdjustedArrow: () => LocalizedString
+		/**
+		 *  (
+		 */
+		modelAdjustedReasonPrefix: () => LocalizedString
+		/**
+		 * )
+		 */
+		modelAdjustedReasonSuffix: () => LocalizedString
+		/**
+		 * Codex 技能列表已刷新。
+		 */
+		skillsRefreshed: () => LocalizedString
+		/**
+		 * Codex 线程上下文已压缩。
+		 */
+		threadCompacted: () => LocalizedString
+	}
+	help: {
+		/**
+		 * 用法：/review [detached] [branch <分支>|commit <SHA>|custom <说明>]
+		 */
+		reviewUsage: () => LocalizedString
+		/**
+		 * 用法：/thread name <名称> 或 /thread meta branch=<分支> sha=<提交> origin=<URL> 或 /thread clean-terminals
+		 */
+		threadUsage: () => LocalizedString
+	}
+	warnings: {
+		/**
+		 * 注意：这不会自动撤销代理已经写到本地文件的改动。
+		 */
+		rollbackNoAutoRevert: () => LocalizedString
+		/**
+		 * 这些 App 可能还需要额外授权：
+		 */
+		appsNeedAuthorization: () => LocalizedString
+		/**
+		 * 扫描警告：
+		 */
+		scanErrorPrefix: () => LocalizedString
+	}
+	input: {
+		/**
+		 * 是
+		 */
+		yes: () => LocalizedString
+		/**
+		 * 否
+		 */
+		no: () => LocalizedString
+	}
+	feishu: {
+		/**
+		 * 帮助
+		 */
+		help: () => LocalizedString
+		/**
+		 * 新建会话
+		 */
+		newSession: () => LocalizedString
+		/**
+		 * 当前状态
+		 */
+		status: () => LocalizedString
+		/**
+		 * 最近会话
+		 */
+		sessions: () => LocalizedString
+		/**
+		 * 中断操作
+		 */
+		interrupt: () => LocalizedString
+		/**
+		 * 查看详情
+		 */
+		inspect: () => LocalizedString
+		/**
+		 * 运行卡
+		 */
+		hub: () => LocalizedString
 	}
 }
 

@@ -1,4 +1,6 @@
 import type { TelegramInlineKeyboardButton, TelegramInlineKeyboardMarkup } from "../telegram/api.js";
+import { getTranslator } from "../i18n/index.js";
+import type { TranslationFunctions } from "../i18n/i18n-types.js";
 import { parseCallbackData } from "../telegram/ui-callbacks.js";
 
 interface FeishuCardBodyElement {
@@ -31,15 +33,26 @@ const BUTTON_ROW_SIZE = 3;
 const CARD_SUMMARY_LIMIT = 72;
 const BUTTON_LABEL_LIMIT = 28;
 
-const COMMAND_LABELS: Record<string, string> = {
-  help: "帮助",
-  new: "新建会话",
-  status: "当前状态",
-  sessions: "最近会话",
-  interrupt: "中断操作",
-  inspect: "查看详情",
-  hub: "运行卡"
-};
+function getCommandLabel(command: string, LL: TranslationFunctions): string | undefined {
+  switch (command) {
+    case "help":
+      return LL.feishu.help();
+    case "new":
+      return LL.feishu.newSession();
+    case "status":
+      return LL.feishu.status();
+    case "sessions":
+      return LL.feishu.sessions();
+    case "interrupt":
+      return LL.feishu.interrupt();
+    case "inspect":
+      return LL.feishu.inspect();
+    case "hub":
+      return LL.feishu.hub();
+    default:
+      return undefined;
+  }
+}
 
 export function decodeHtmlEntities(text: string): string {
   return text
@@ -136,7 +149,8 @@ function parseHtmlCard(html: string): ParsedHtmlCard {
 
 function mapCallbackToLabel(
   button: TelegramInlineKeyboardButton,
-  numberedLabels: Map<number, string>
+  numberedLabels: Map<number, string>,
+  LL: TranslationFunctions
 ): string {
   const parsed = parseCallbackData(button.callback_data);
   const numericValue = /^\d+$/u.test(button.text) ? Number.parseInt(button.text, 10) : null;
@@ -146,39 +160,39 @@ function mapCallbackToLabel(
 
   switch (parsed?.kind) {
     case "new_browse_open":
-      return "浏览目录";
+      return LL.projects.browseDirectory();
     case "path_manual":
-      return "手动输入路径";
+      return LL.projects.enterPath();
     case "path_back":
     case "new_browse_back":
     case "browse_back":
-      return "返回";
+      return LL.common.back();
     case "browse_use_current_dir":
-      return "在当前目录新建";
+      return LL.labels.createSessionHere();
     case "browse_use_current_dir_confirm":
-      return "确认新建会话";
+      return LL.browser.confirmNewSession();
     case "browse_use_current_dir_cancel":
-      return "返回目录";
+      return LL.browser.backToDirectory();
     case "browse_refresh":
-      return "刷新";
+      return LL.browser.refresh();
     case "browse_root":
-      return "项目根";
+      return LL.browser.root();
     case "browse_up":
-      return "上一级";
+      return LL.labels.parentDirectory();
     case "browse_close":
-      return "关闭";
+      return LL.common.close();
     case "status_inspect":
-      return "查看详情";
+      return LL.feishu.inspect();
     case "status_interrupt":
-      return "中断操作";
+      return LL.feishu.interrupt();
     case "commands_open":
-      return "命令";
+      return LL.common.commands();
     case "commands_help":
-      return "帮助";
+      return LL.feishu.help();
     case "commands_run":
-      return COMMAND_LABELS[parsed.command] ?? button.text;
+      return getCommandLabel(parsed.command, LL) ?? button.text;
     case "hub_select":
-      return button.text === "·" ? "空槽位" : `会话 ${button.text}`;
+      return button.text === "·" ? LL.common.emptySlot() : `${LL.runtime.session()} ${button.text}`;
     default:
       return truncatePlainText(button.text, BUTTON_LABEL_LIMIT);
   }
@@ -250,24 +264,24 @@ function resolveButtonType(button: TelegramInlineKeyboardButton): "default" | "p
   return "default";
 }
 
-function buildButtonConfirm(button: TelegramInlineKeyboardButton): SemanticButton["confirm"] {
+function buildButtonConfirm(button: TelegramInlineKeyboardButton, LL: TranslationFunctions): SemanticButton["confirm"] {
   const parsed = parseCallbackData(button.callback_data);
   if (parsed?.kind === "status_interrupt" || (parsed?.kind === "commands_run" && parsed.command === "interrupt")) {
     return {
-      title: "确认中断",
-      text: "要停止当前正在运行的操作吗？"
+      title: LL.runtime.confirmInterruptTitle(),
+      text: LL.runtime.confirmInterruptText()
     };
   }
 
   return undefined;
 }
 
-function normalizeButtons(replyMarkup: TelegramInlineKeyboardMarkup | undefined, numberedLabels: Map<number, string>): SemanticButton[] {
+function normalizeButtons(replyMarkup: TelegramInlineKeyboardMarkup | undefined, numberedLabels: Map<number, string>, LL: TranslationFunctions): SemanticButton[] {
   const flattened = (replyMarkup?.inline_keyboard ?? []).flat();
   return flattened.map((button) => {
-    const confirm = buildButtonConfirm(button);
+    const confirm = buildButtonConfirm(button, LL);
     return {
-      text: mapCallbackToLabel(button, numberedLabels),
+      text: mapCallbackToLabel(button, numberedLabels, LL),
       callbackData: button.callback_data,
       priority: buttonPriority(button),
       overflowEligible: isOverflowEligible(button),
@@ -430,7 +444,7 @@ function shouldDisableForward(title: string, hasCallbacks: boolean): boolean {
   return /状态|当前会话|运行|选择|文件浏览|预览|快捷指令|欢迎|接入|Status|Runtime|Browser|Commands|Welcome/iu.test(title);
 }
 
-function buildBodyElements(parsed: ParsedHtmlCard, replyMarkup?: TelegramInlineKeyboardMarkup): FeishuCardBodyElement[] {
+function buildBodyElements(parsed: ParsedHtmlCard, replyMarkup: TelegramInlineKeyboardMarkup | undefined, LL: TranslationFunctions): FeishuCardBodyElement[] {
   const textElements: FeishuCardBodyElement[] = parsed.sections.length === 0
     ? [{
         tag: "markdown",
@@ -449,17 +463,19 @@ function buildBodyElements(parsed: ParsedHtmlCard, replyMarkup?: TelegramInlineK
     return textElements;
   }
 
-  const normalizedButtons = normalizeButtons(replyMarkup, parsed.numberedLabels);
+  const normalizedButtons = normalizeButtons(replyMarkup, parsed.numberedLabels, LL);
   const { mainButtons, overflowButtons } = partitionButtons(normalizedButtons);
   return [...textElements, ...buildButtonRows(mainButtons, overflowButtons)];
 }
 
 export function buildFeishuInteractiveCard(
   html: string,
-  replyMarkup?: TelegramInlineKeyboardMarkup
+  replyMarkup?: TelegramInlineKeyboardMarkup,
+  language: "zh" | "en" = "zh"
 ): string {
+  const LL = getTranslator(language);
   const parsed = parseHtmlCard(html);
-  const bodyElements = buildBodyElements(parsed, replyMarkup);
+  const bodyElements = buildBodyElements(parsed, replyMarkup, LL);
   const hasCallbacks = Boolean(replyMarkup && replyMarkup.inline_keyboard.some((row) => row.length > 0));
   const disableForward = shouldDisableForward(parsed.title, hasCallbacks);
 

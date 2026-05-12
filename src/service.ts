@@ -327,6 +327,7 @@ export class BridgeService {
     this.runtimeNoticeBroadcaster = new RuntimeNoticeBroadcaster({
       getStore: () => this.store,
       activePack: this.config.activePack,
+      getUiLanguage: () => this.getUiLanguage(),
       safeSendMessage: async (chatId, text) => this.safeSendMessage(chatId, text)
     });
     this.threadArchiveReconciler = new ThreadArchiveReconciler({
@@ -340,6 +341,7 @@ export class BridgeService {
     this.interactionBroker = new InteractionBroker({
       getStore: () => this.store,
       getAppServer: () => this.appServer,
+      getUiLanguage: () => this.getUiLanguage(),
       logger: this.logger,
       preferBridgeCommandButtons: this.preferBridgeCommandButtons,
       safeSendMessage: async (chatId, text) => this.safeSendMessage(chatId, text),
@@ -454,6 +456,7 @@ export class BridgeService {
       paths: { runtimeDir: this.paths.runtimeDir },
       logger: this.loggerAdapter,
       getStore: () => this.store,
+      getUiLanguage: () => this.getUiLanguage(),
       getAppServer: () => this.appServer,
       ensureAppServerAvailable: async () => this.ensureAppServerAvailable(),
       fetchRuntimeConfig: async (cwd) => this.fetchRuntimeConfig(cwd),
@@ -581,6 +584,7 @@ export class BridgeService {
     });
     this.codexCommandCoordinator = new CodexCommandCoordinator({
       getStore: () => this.store,
+      getUiLanguage: () => this.getUiLanguage(),
       ensureAppServerAvailable: async () => this.requireAppServer(),
       startFreshThreadForClear: async (session) => {
         const appServer = await this.requireAppServer();

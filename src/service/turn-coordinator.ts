@@ -1,4 +1,5 @@
 import type { Logger } from "../logger.js";
+import { getTranslator } from "../i18n/index.js";
 import { TurnDebugJournal, type DebugJournalWriter } from "../activity/debug-journal.js";
 import { ActivityTracker, type SubagentIdentityEvent } from "../activity/tracker.js";
 import type { ActivityStatus } from "../activity/types.js";
@@ -45,7 +46,7 @@ import type {
 } from "./interaction-broker.js";
 import type { EgressMessageSendResult } from "../packs/contract.js";
 import type { BridgeStateStore } from "../state/store.js";
-import type { SessionRow, ReasoningEffort } from "../types.js";
+import type { SessionRow, ReasoningEffort, UiLanguage } from "../types.js";
 import {
   createStatusCardMessageState,
   type ErrorCardState,
@@ -147,6 +148,7 @@ interface TurnCoordinatorDeps {
   paths: Pick<BridgePaths, "runtimeDir">;
   logger: Logger;
   getStore: () => BridgeStateStore | null;
+  getUiLanguage: () => UiLanguage;
   getAppServer: () => CodexAppServerClient | null;
   ensureAppServerAvailable: () => Promise<void>;
   fetchRuntimeConfig: (cwd: string) => Promise<{
@@ -321,39 +323,41 @@ export class TurnCoordinator {
   }
 
   async handleInterrupt(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeSendMessage(chatId, "当前没有正在执行的操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noRunningOperation());
       return;
     }
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || activeSession.status !== "running") {
-      await this.deps.safeSendMessage(chatId, "当前没有正在执行的操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noRunningOperation());
       return;
     }
 
     const activeTurn = this.getActiveTurnBySessionId(activeSession.sessionId);
     if (!activeTurn) {
-      await this.deps.safeSendMessage(chatId, "当前没有正在执行的操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noRunningOperation());
       return;
     }
 
     try {
       await this.deps.ensureAppServerAvailable();
       await this.deps.getAppServer()?.interruptTurn(activeTurn.threadId, activeTurn.turnId);
-      await this.deps.safeSendMessage(chatId, "已请求停止当前操作。");
+      await this.deps.safeSendMessage(chatId, LL.success.stopRequested());
     } catch {
-      await this.deps.safeSendMessage(chatId, "当前无法中断正在运行的操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.interruptUnavailable());
     }
   }
 
   async interruptSession(chatId: string, sessionId: string): Promise<{ ok: boolean; message: string }> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const activeTurn = this.getActiveTurnBySessionId(sessionId);
     if (!activeTurn || activeTurn.chatId !== chatId) {
       return {
         ok: false,
-        message: "这个按钮已过期，请重新操作。"
+        message: LL.errors.buttonExpired()
       };
     }
 
@@ -362,12 +366,12 @@ export class TurnCoordinator {
       await this.deps.getAppServer()?.interruptTurn(activeTurn.threadId, activeTurn.turnId);
       return {
         ok: true,
-        message: "已请求停止这个会话的当前操作。"
+        message: LL.success.stopRequestedForSession()
       };
     } catch {
       return {
         ok: false,
-        message: "当前无法中断这个会话的操作。"
+        message: LL.errors.interruptUnavailableForSession()
       };
     }
   }
@@ -399,6 +403,7 @@ export class TurnCoordinator {
     kind: "text" | "structured",
     afterStart?: (store: NonNullable<ReturnType<typeof this.deps.getStore>>, threadId: string, turnId: string) => void
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -408,7 +413,7 @@ export class TurnCoordinator {
     if (!capacity.allowed) {
       await this.deps.safeSendMessage(
         chatId,
-        `当前最多只能并行运行 ${capacity.limit} 个会话，请先等待完成或停止部分任务。`
+        LL.errors.runningSessionLimitPrefix() + String(capacity.limit) + LL.errors.runningSessionLimitSuffix()
       );
       return;
     }
@@ -447,7 +452,7 @@ export class TurnCoordinator {
         lastTurnId: session.lastTurnId,
         lastTurnStatus: "failed"
       });
-      await this.deps.safeSendMessage(chatId, "Codex 服务暂时不可用，请稍后重试。");
+      await this.deps.safeSendMessage(chatId, LL.errors.codexUnavailable());
     }
   }
 
@@ -741,6 +746,7 @@ export class TurnCoordinator {
     params: unknown,
     classified: ReturnType<typeof classifyNotification>
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const sessionTitleUpdated = this.syncSessionTitleFromNotification(classified);
 
     if (this.shouldIgnoreTerminalNotification(classified)) {
@@ -976,10 +982,11 @@ export class TurnCoordinator {
       lastTurnStatus: classified.status
     });
     this.deps.disposeRuntimeCards(activeTurn);
-    await this.deps.safeSendMessage(activeTurn.chatId, "这次操作未成功完成，请重试。");
+    await this.deps.safeSendMessage(activeTurn.chatId, LL.errors.operationIncomplete());
   }
 
   async handleActiveTurnAppServerExit(): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1006,7 +1013,7 @@ export class TurnCoordinator {
         lastTurnId: runningTurn.turnId,
         lastTurnStatus: "failed"
       });
-      await this.deps.safeSendMessage(runningTurn.chatId, "Codex 服务暂时不可用，请稍后重试。");
+      await this.deps.safeSendMessage(runningTurn.chatId, LL.errors.codexUnavailable());
     }
   }
 
@@ -1119,7 +1126,8 @@ export class TurnCoordinator {
   }
 
   private async sendFinalAnswer(activeTurn: ActiveTurnState, finalMessage: string | null): Promise<TerminalDeliveryResult> {
-    const text = finalMessage || "本次操作已完成，但没有可返回的最终答复。";
+    const LL = getTranslator(this.deps.getUiLanguage());
+    const text = finalMessage || LL.errors.noFinalResponse();
     const rendered = buildCollapsibleFinalAnswerView(text, this.getFinalAnswerRenderContext(activeTurn.sessionId));
     await this.deps.logger.info("sending final answer", {
       chatId: activeTurn.chatId,

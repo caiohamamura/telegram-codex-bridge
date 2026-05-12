@@ -145,6 +145,7 @@ async function createCoordinatorContext(options: {
   const coordinator = new TurnCoordinator({
     paths: { runtimeDir: paths.runtimeDir },
     logger: testLogger,
+    getUiLanguage: () => "zh",
     getStore: () => store,
     getAppServer: () => appServer as CodexAppServerClient,
     ensureAppServerAvailable: async () => {},

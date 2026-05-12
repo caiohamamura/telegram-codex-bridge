@@ -15,9 +15,10 @@ import {
   formatSessionModelReasoningConfig,
   type RollbackTargetView
 } from "../telegram/ui.js";
-import type { ReasoningEffort, SessionRow } from "../types.js";
+import type { ReasoningEffort, SessionRow, UiLanguage } from "../types.js";
 import { normalizeAndTruncate, normalizeWhitespace, truncateText, summarizeTextPreview, splitStructuredInputCommand, HISTORY_TEXT_LIMIT } from "../util/text.js";
 import { asRecord, getArray, getString } from "../util/untyped.js";
+import { getTranslator } from "../i18n/index.js";
 
 interface ReviewCommandArgs {
   delivery?: "inline" | "detached";
@@ -36,6 +37,7 @@ interface ThreadMetadataUpdate {
 
 interface CodexCommandCoordinatorDeps {
   getStore: () => BridgeStateStore | null;
+  getUiLanguage: () => UiLanguage;
   ensureAppServerAvailable: () => Promise<CodexAppServerClient>;
   startFreshThreadForClear: (session: SessionRow) => Promise<Awaited<ReturnType<CodexAppServerClient["startThread"]>>>;
   fetchAllModels: () => Promise<
@@ -117,6 +119,7 @@ export class CodexCommandCoordinator {
   constructor(private readonly deps: CodexCommandCoordinatorDeps) {}
 
   async handleModel(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -124,7 +127,7 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
@@ -144,14 +147,14 @@ export class CodexCommandCoordinator {
       return;
     }
 
-    if (requestedModel === "default" || requestedModel === "默认") {
+    if (requestedModel === "default" || requestedModel === LL.common.default()) {
       await this.persistSessionModelSelection(chatId, null, activeSession, null, null);
       return;
     }
 
     const matched = models.find((model) => model.id === requestedModel || model.model === requestedModel);
     if (!matched) {
-      await this.deps.safeSendMessage(chatId, "找不到这个模型，请先发送 /model 用按钮选择。");
+      await this.deps.safeSendMessage(chatId, LL.errors.modelNotFound());
       return;
     }
 
@@ -177,15 +180,16 @@ export class CodexCommandCoordinator {
     messageId: number,
     sessionId: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
     const session = this.getActiveSessionForModelCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -195,7 +199,7 @@ export class CodexCommandCoordinator {
     await this.deps.safeEditMessageText(
       chatId,
       messageId,
-      this.buildModelSelectionText(session.displayName, "默认模型 + 默认")
+      this.buildModelSelectionText(LL, session.displayName, LL.model.defaultSelectionLabel())
     );
   }
 
@@ -205,9 +209,10 @@ export class CodexCommandCoordinator {
     messageId: number,
     sessionId: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getActiveSessionForModelCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -223,9 +228,10 @@ export class CodexCommandCoordinator {
     sessionId: string,
     page: number
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getActiveSessionForModelCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -244,9 +250,10 @@ export class CodexCommandCoordinator {
     sessionId: string,
     modelIndex: number
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getActiveSessionForModelCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -255,7 +262,7 @@ export class CodexCommandCoordinator {
     const models = await this.deps.fetchAllModels();
     const model = models[modelIndex];
     if (!model) {
-      await this.handleExpiredModelPicker(chatId, messageId);
+      await this.handleExpiredModelPicker(chatId, messageId, LL);
       return;
     }
 
@@ -277,9 +284,10 @@ export class CodexCommandCoordinator {
     modelIndex: number,
     effort: ReasoningEffort | null
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getActiveSessionForModelCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新操作。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpired());
       return;
     }
 
@@ -288,7 +296,7 @@ export class CodexCommandCoordinator {
     const models = await this.deps.fetchAllModels();
     const model = models[modelIndex];
     if (!model) {
-      await this.handleExpiredModelPicker(chatId, messageId);
+      await this.handleExpiredModelPicker(chatId, messageId, LL);
       return;
     }
 
@@ -296,6 +304,7 @@ export class CodexCommandCoordinator {
   }
 
   async handleSkills(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -303,7 +312,7 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
@@ -314,24 +323,25 @@ export class CodexCommandCoordinator {
     });
     const entry = result.data.find((candidate) => candidate.cwd === activeSession.projectPath) ?? result.data[0];
     if (!entry) {
-      await this.deps.safeSendMessage(chatId, "当前项目没有可列出的技能。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noSkillsAvailable());
       return;
     }
 
-    const lines = this.buildSessionProjectContextLines(activeSession, "可用技能");
+    const lines = this.buildSessionProjectContextLines(LL, activeSession, LL.labels.availableSkills());
     for (const skill of entry.skills.slice(0, 20)) {
       const description = skill.interface?.shortDescription ?? skill.shortDescription ?? skill.description;
-      const marker = skill.enabled ? "[启用] " : "[禁用] ";
+      const marker = skill.enabled ? LL.labels.enabled() + " " : LL.labels.disabled() + " ";
       lines.push(`${marker}${skill.name} | ${summarizeTextPreview(description, 80)}`);
     }
     if (entry.errors.length > 0) {
-      lines.push("", `扫描警告：${summarizeTextPreview(entry.errors[0]?.message ?? "unknown error", 120)}`);
+      lines.push("", LL.labels.scanWarningPrefix() + summarizeTextPreview(entry.errors[0]?.message ?? "unknown error", 120));
     }
-    lines.push("", "使用 /skill <技能名> :: 任务说明 将 skill 作为结构化输入发送给 Codex。");
+    lines.push("", LL.labels.skillUsage());
     await this.deps.safeSendMessage(chatId, lines.join("\n"));
   }
 
   async handleSkill(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -339,13 +349,13 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     const parsed = splitStructuredInputCommand(args);
     if (!parsed.value) {
-      await this.deps.safeSendMessage(chatId, "用法：/skill <技能名> :: 任务说明");
+      await this.deps.safeSendMessage(chatId, LL.errors.skillUsageHint());
       return;
     }
 
@@ -357,7 +367,7 @@ export class CodexCommandCoordinator {
     const entry = result.data.find((candidate) => candidate.cwd === activeSession.projectPath) ?? result.data[0];
     const skill = entry?.skills.find((candidate) => candidate.name === parsed.value);
     if (!skill) {
-      await this.deps.safeSendMessage(chatId, "找不到这个技能，请先发送 /skills 查看当前项目的技能列表。");
+      await this.deps.safeSendMessage(chatId, LL.errors.skillNotFound());
       return;
     }
 
@@ -365,10 +375,11 @@ export class CodexCommandCoordinator {
       type: "skill",
       name: skill.name,
       path: skill.path
-    }], parsed.prompt, `skill：${skill.name}`);
+    }], parsed.prompt, LL.labels.skillLabelPrefix() + skill.name);
   }
 
   async handlePlugins(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -376,7 +387,7 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
@@ -385,19 +396,19 @@ export class CodexCommandCoordinator {
       cwds: [activeSession.projectPath]
     });
     if (result.marketplaces.length === 0) {
-      await this.deps.safeSendMessage(chatId, "当前项目没有可列出的插件。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noPluginsAvailable());
       return;
     }
 
-    const lines = this.buildSessionProjectContextLines(activeSession, "可用插件");
+    const lines = this.buildSessionProjectContextLines(LL, activeSession, LL.labels.availablePlugins());
     const installExample = findFirstInstallablePlugin(result);
 
     for (const marketplace of result.marketplaces.slice(0, 5)) {
-      lines.push(`市场：${marketplace.name}`);
+      lines.push(LL.labels.marketplacePrefix() + marketplace.name);
       for (const plugin of marketplace.plugins.slice(0, 8)) {
         const flags = [
-          plugin.installed ? "[已安装]" : "[未安装]",
-          plugin.enabled ? "[启用]" : ""
+          plugin.installed ? LL.labels.installed() : LL.labels.notInstalled(),
+          plugin.enabled ? LL.labels.enabled() : ""
         ].join("");
         const label = plugin.interface?.displayName ?? plugin.name;
         const description = plugin.interface?.shortDescription;
@@ -405,15 +416,16 @@ export class CodexCommandCoordinator {
       }
     }
 
-    lines.push("", "使用 /plugin install <市场>/<插件名> 安装插件。");
-    lines.push("使用 /plugin uninstall <插件ID> 卸载插件。");
+    lines.push("", LL.labels.pluginInstallUsage());
+    lines.push(LL.labels.pluginUninstallUsage());
     if (installExample) {
-      lines.push(`例如：/plugin install ${installExample.marketplaceName}/${installExample.pluginName}`);
+      lines.push(LL.labels.pluginInstallExamplePrefix() + installExample.marketplaceName + "/" + installExample.pluginName);
     }
     await this.deps.safeSendMessage(chatId, lines.join("\n"));
   }
 
   async handlePlugin(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -421,7 +433,7 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
@@ -432,7 +444,7 @@ export class CodexCommandCoordinator {
       const target = rest.join(" ").trim();
       const parsedTarget = parsePluginInstallTarget(target);
       if (!parsedTarget) {
-        await this.deps.safeSendMessage(chatId, "用法：/plugin install <市场>/<插件名>");
+        await this.deps.safeSendMessage(chatId, LL.errors.pluginInstallUsage());
         return;
       }
 
@@ -442,7 +454,7 @@ export class CodexCommandCoordinator {
       const marketplace = result.marketplaces.find((entry) => entry.name === parsedTarget.marketplaceName);
       const plugin = marketplace?.plugins.find((entry) => entry.name === parsedTarget.pluginName);
       if (!marketplace || !plugin) {
-        await this.deps.safeSendMessage(chatId, "找不到这个插件，请先发送 /plugins 查看当前可用列表。");
+        await this.deps.safeSendMessage(chatId, LL.errors.pluginNotFound());
         return;
       }
 
@@ -450,9 +462,9 @@ export class CodexCommandCoordinator {
         marketplacePath: marketplace.path,
         pluginName: plugin.name
       });
-      const lines = [`已为项目「${this.projectDisplayName(activeSession)}」安装插件：${plugin.name}`];
+      const lines = [LL.success.pluginInstalledPrefix() + this.projectDisplayName(activeSession) + LL.success.pluginInstalledMiddle() + plugin.name];
       if (installResult.appsNeedingAuth.length > 0) {
-        lines.push("", "这些 App 可能还需要额外授权：");
+        lines.push("", LL.warnings.appsNeedAuthorization());
         for (const app of installResult.appsNeedingAuth.slice(0, 5)) {
           lines.push(`- ${app.name}${app.installUrl ? ` | ${app.installUrl}` : ""}`);
         }
@@ -464,19 +476,20 @@ export class CodexCommandCoordinator {
     if (subcommand === "uninstall") {
       const pluginId = rest.join(" ").trim();
       if (!pluginId) {
-        await this.deps.safeSendMessage(chatId, "用法：/plugin uninstall <插件ID>");
+        await this.deps.safeSendMessage(chatId, LL.errors.pluginUninstallUsage());
         return;
       }
 
       await appServer.uninstallPlugin(pluginId);
-      await this.deps.safeSendMessage(chatId, `已为项目「${this.projectDisplayName(activeSession)}」卸载插件：${pluginId}`);
+      await this.deps.safeSendMessage(chatId, LL.success.pluginUninstalledPrefix() + this.projectDisplayName(activeSession) + LL.success.pluginUninstalledMiddle() + pluginId);
       return;
     }
 
-    await this.deps.safeSendMessage(chatId, "用法：/plugin install <市场>/<插件名> 或 /plugin uninstall <插件ID>");
+    await this.deps.safeSendMessage(chatId, LL.errors.pluginUsage());
   }
 
   async handleApps(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -484,29 +497,29 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     await this.deps.ensureAppServerAvailable();
     const apps = await this.deps.fetchAllApps(activeSession.threadId ?? undefined);
     if (apps.length === 0) {
-      await this.deps.safeSendMessage(chatId, "当前没有可列出的 Apps。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noAppsAvailable());
       return;
     }
 
-    const lines = this.buildSessionProjectContextLines(activeSession, "当前可用 Apps");
+    const lines = this.buildSessionProjectContextLines(LL, activeSession, LL.labels.availableApps());
     for (const app of apps.slice(0, 12)) {
       const flags = [
-        app.isAccessible ? "[可访问]" : "[不可访问]",
-        app.isEnabled ? "[启用]" : "[未启用]"
+        app.isAccessible ? LL.labels.accessible() : LL.labels.notAccessible(),
+        app.isEnabled ? LL.labels.enabled() : ""
       ].join("");
       lines.push(`${flags} ${app.name}${app.description ? ` | ${summarizeTextPreview(app.description, 70)}` : ""}`);
       if (app.pluginDisplayNames.length > 0) {
-        lines.push(`来源插件：${app.pluginDisplayNames.join("、")}`);
+        lines.push(LL.labels.sourcePluginPrefix() + app.pluginDisplayNames.join("、"));
       }
       if (app.installUrl) {
-        lines.push(`安装地址：${app.installUrl}`);
+        lines.push(LL.labels.installUrlPrefix() + app.installUrl);
       }
     }
 
@@ -514,6 +527,7 @@ export class CodexCommandCoordinator {
   }
 
   async handleMcp(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const trimmed = args.trim();
     const [subcommand = "", ...rest] = trimmed.split(/\s+/u);
     const appServer = await this.deps.ensureAppServerAvailable();
@@ -521,51 +535,52 @@ export class CodexCommandCoordinator {
     if (!trimmed) {
       const statuses = await this.deps.fetchAllMcpServerStatuses();
       if (statuses.length === 0) {
-        await this.deps.safeSendMessage(chatId, "当前没有可列出的 MCP 服务器。");
+        await this.deps.safeSendMessage(chatId, LL.errors.noMcpServers());
         return;
       }
 
-      const lines = ["MCP 服务器状态"];
+      const lines: string[] = [LL.labels.mcpServerStatus()];
       for (const status of statuses.slice(0, 12)) {
         lines.push(
-          `${status.name} | ${formatMcpAuthStatus(status.authStatus)} | 工具 ${Object.keys(status.tools).length} | 资源 ${status.resources.length} | 模板 ${status.resourceTemplates.length}`
+          `${status.name} | ${formatMcpAuthStatus(LL, status.authStatus)} | ${LL.labels.mcpToolsPrefix()}${Object.keys(status.tools).length} | ${LL.labels.mcpResourcesPrefix()}${status.resources.length} | ${LL.labels.mcpTemplatesPrefix()}${status.resourceTemplates.length}`
         );
       }
-      lines.push("", "使用 /mcp reload 重新加载配置，或 /mcp login <名称> 启动 OAuth 登录。");
+      lines.push("", LL.labels.mcpUsage());
       await this.deps.safeSendMessage(chatId, lines.join("\n"));
       return;
     }
 
     if (subcommand === "reload") {
       await appServer.reloadMcpServers();
-      await this.deps.safeSendMessage(chatId, "已重新加载 MCP 服务器配置。");
+      await this.deps.safeSendMessage(chatId, LL.success.mcpReloaded());
       return;
     }
 
     if (subcommand === "login") {
       const serverName = rest.join(" ").trim();
       if (!serverName) {
-        await this.deps.safeSendMessage(chatId, "用法：/mcp login <名称>");
+        await this.deps.safeSendMessage(chatId, LL.errors.mcpLoginUsage());
         return;
       }
 
       const result = await appServer.loginToMcpServer({ name: serverName });
       if (!result.authorizationUrl) {
-        await this.deps.safeSendMessage(chatId, "当前无法生成这个 MCP 服务器的登录链接。");
+        await this.deps.safeSendMessage(chatId, LL.errors.mcpLoginFailed());
         return;
       }
 
       await this.deps.safeSendMessage(
         chatId,
-        `已生成 MCP 登录链接：${serverName}\n${result.authorizationUrl}\n完成后重新发送 /mcp 查看最新状态。`
+        LL.success.mcpLoginLinkPrefix() + serverName + LL.success.mcpLoginLinkMiddle() + result.authorizationUrl + LL.success.mcpLoginLinkSuffix()
       );
       return;
     }
 
-    await this.deps.safeSendMessage(chatId, "用法：/mcp、/mcp reload 或 /mcp login <名称>");
+    await this.deps.safeSendMessage(chatId, LL.errors.mcpUsage());
   }
 
   async handleAccount(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const appServer = await this.deps.ensureAppServerAvailable();
     const accountResult = await appServer.readAccount(false);
     let rateLimitsResult: Awaited<ReturnType<CodexAppServerClient["readAccountRateLimits"]>> | null = null;
@@ -576,19 +591,19 @@ export class CodexCommandCoordinator {
       rateLimitsResult = null;
     }
 
-    const lines = ["当前 Codex 账号"];
+    const lines: string[] = [LL.labels.currentCodexAccount()];
     if (!accountResult.account) {
-      lines.push("账号：未登录");
+      lines.push(LL.labels.accountNotLoggedIn());
     } else if (accountResult.account.type === "apiKey") {
-      lines.push("类型：API Key");
+      lines.push(LL.labels.accountTypeApiKey());
     } else {
-      lines.push("类型：ChatGPT");
-      lines.push(`邮箱：${accountResult.account.email}`);
-      lines.push(`计划：${accountResult.account.planType}`);
+      lines.push(LL.labels.accountTypeChatGPT());
+      lines.push(LL.labels.accountEmailPrefix() + accountResult.account.email);
+      lines.push(LL.labels.accountPlanPrefix() + accountResult.account.planType);
     }
-    lines.push(`需要 OpenAI Auth：${accountResult.requiresOpenaiAuth ? "是" : "否"}`);
+    lines.push(LL.labels.requiresOpenaiAuth() + LL.common.separator + (accountResult.requiresOpenaiAuth ? LL.labels.requiresOpenaiAuthYes() : LL.labels.requiresOpenaiAuthNo()));
 
-    const rateSummary = formatRateLimitSummary(rateLimitsResult?.rateLimits ?? null);
+    const rateSummary = formatRateLimitSummary(LL, rateLimitsResult?.rateLimits ?? null);
     if (rateSummary) {
       lines.push(rateSummary);
     }
@@ -597,6 +612,7 @@ export class CodexCommandCoordinator {
   }
 
   async handleReview(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -604,12 +620,12 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     if (activeSession.status === "running") {
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请先等待完成或停止当前操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusy());
       return;
     }
 
@@ -617,7 +633,7 @@ export class CodexCommandCoordinator {
     if (!capacity.allowed) {
       await this.deps.safeSendMessage(
         chatId,
-        `当前最多只能并行运行 ${capacity.limit} 个会话，请先等待完成或停止部分任务。`
+        LL.errors.runningCapacityLimitPrefix() + capacity.limit + LL.errors.runningCapacityLimitSuffix()
       );
       return;
     }
@@ -626,7 +642,7 @@ export class CodexCommandCoordinator {
     if (!parsed) {
       await this.deps.safeSendMessage(
         chatId,
-        "用法：/review [detached] [branch <分支>|commit <SHA>|custom <说明>]"
+        LL.errors.reviewUsage()
       );
       return;
     }
@@ -654,7 +670,7 @@ export class CodexCommandCoordinator {
       });
       store.updateSessionThreadId(reviewSession.sessionId, result.reviewThreadId);
       reviewSession = store.getSessionById(reviewSession.sessionId) ?? reviewSession;
-      await this.deps.safeSendMessage(chatId, `已创建审查会话：${reviewSession.displayName}`);
+      await this.deps.safeSendMessage(chatId, LL.success.reviewSessionCreatedPrefix() + reviewSession.displayName);
     }
 
     await this.deps.beginActiveTurn(chatId, reviewSession, result.reviewThreadId, result.turn.id, result.turn.status, {
@@ -663,6 +679,7 @@ export class CodexCommandCoordinator {
   }
 
   async handleFork(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -670,12 +687,12 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || !activeSession.threadId) {
-      await this.deps.safeSendMessage(chatId, "当前会话还没有可分叉的 Codex 线程，请先完成一次任务。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noThreadToFork());
       return;
     }
 
     if (activeSession.status === "running") {
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请先等待完成或停止当前操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusy());
       return;
     }
 
@@ -700,11 +717,12 @@ export class CodexCommandCoordinator {
       lastTurnId: lastForkTurn?.id ?? activeSession.lastTurnId,
       lastTurnStatus: lastForkTurn?.status ?? activeSession.lastTurnStatus
     });
-    await this.deps.safeSendMessage(chatId, `已创建分叉会话：${created.displayName}`);
+    await this.deps.safeSendMessage(chatId, LL.success.forkSessionCreatedPrefix() + created.displayName);
   }
 
   async handleRollback(chatId: string, args: string): Promise<void> {
-    const session = this.getIdleRollbackSession(chatId);
+    const LL = getTranslator(this.deps.getUiLanguage());
+    const session = this.getIdleRollbackSession(chatId, LL);
     if (!session) {
       return;
     }
@@ -713,7 +731,7 @@ export class CodexCommandCoordinator {
     if (!trimmed) {
       const targets = await this.buildRollbackTargets(session);
       if (targets.length === 0) {
-        await this.deps.safeSendMessage(chatId, "当前没有可选择的回滚目标。");
+        await this.deps.safeSendMessage(chatId, LL.errors.noRollbackTarget());
         return;
       }
 
@@ -728,12 +746,12 @@ export class CodexCommandCoordinator {
 
     const numTurns = Number.parseInt(trimmed, 10);
     if (!Number.isFinite(numTurns) || numTurns < 1) {
-      await this.deps.safeSendMessage(chatId, "用法：/rollback 或 /rollback <回滚的 turn 数量>");
+      await this.deps.safeSendMessage(chatId, LL.errors.rollbackUsage());
       return;
     }
 
     await this.executeRollback(session, numTurns);
-    await this.deps.safeSendMessage(chatId, buildRollbackSuccessText(numTurns, session.displayName));
+    await this.deps.safeSendMessage(chatId, buildRollbackSuccessText(LL, numTurns, session.displayName));
   }
 
   async handleRollbackPickerCallback(
@@ -752,15 +770,16 @@ export class CodexCommandCoordinator {
           targetIndex: number;
         }
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getRollbackSessionForCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /rollback。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRollback());
       return;
     }
 
     const targets = await this.buildRollbackTargets(session);
     if (targets.length === 0) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "当前没有可选择的回滚目标。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.noRollbackTarget());
       return;
     }
 
@@ -769,7 +788,7 @@ export class CodexCommandCoordinator {
     if (options.mode === "confirm") {
       const target = targets.find((candidate) => candidate.index === options.targetIndex);
       if (!target) {
-        await this.deps.safeEditMessageText(chatId, messageId, "这个回滚目标已失效，请重新发送 /rollback。");
+        await this.deps.safeEditMessageText(chatId, messageId, LL.errors.rollbackTargetExpired());
         return;
       }
 
@@ -797,16 +816,17 @@ export class CodexCommandCoordinator {
     sessionId: string,
     targetIndex: number
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getRollbackSessionForCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /rollback。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRollback());
       return;
     }
 
     const targets = await this.buildRollbackTargets(session);
     const target = targets.find((candidate) => candidate.index === targetIndex);
     if (!target || target.rollbackCount < 1) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个回滚目标已失效，请重新发送 /rollback。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.rollbackTargetExpired());
       return;
     }
 
@@ -815,7 +835,7 @@ export class CodexCommandCoordinator {
     await this.deps.safeEditMessageText(
       chatId,
       messageId,
-      `已回滚到：${target.sequenceNumber}. ${target.label}\n${buildRollbackSuccessText(target.rollbackCount, session.displayName)}`
+      LL.success.rollbackCompletedPrefix() + target.sequenceNumber + ". " + target.label + "\n" + buildRollbackSuccessText(LL, target.rollbackCount, session.displayName)
     );
   }
 
@@ -825,9 +845,10 @@ export class CodexCommandCoordinator {
     messageId: number,
     sessionId: string
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const session = this.getRollbackSessionForCallback(chatId, sessionId);
     if (!session) {
-      await this.deps.safeAnswerCallbackQuery(callbackQueryId, "这个按钮已过期，请重新发送 /rollback。");
+      await this.deps.safeAnswerCallbackQuery(callbackQueryId, LL.errors.buttonExpiredRollback());
       return;
     }
 
@@ -836,6 +857,7 @@ export class CodexCommandCoordinator {
   }
 
   async handleCompact(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -843,21 +865,22 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || !activeSession.threadId) {
-      await this.deps.safeSendMessage(chatId, "当前会话还没有可压缩的 Codex 线程。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noThreadToCompact());
       return;
     }
 
     if (activeSession.status === "running") {
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请先等待完成或停止当前操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusy());
       return;
     }
 
     const appServer = await this.deps.ensureAppServerAvailable();
     await appServer.compactThread(activeSession.threadId);
-    await this.deps.safeSendMessage(chatId, `已为会话「${activeSession.displayName}」请求压缩当前线程。`);
+    await this.deps.safeSendMessage(chatId, LL.success.compactRequestedPrefix() + activeSession.displayName + LL.success.compactRequestedSuffix());
   }
 
   async handleClear(chatId: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -865,12 +888,12 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession) {
-      await this.deps.safeSendMessage(chatId, "当前没有活动会话。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noActiveSession());
       return;
     }
 
     if (activeSession.status === "running") {
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请先等待完成或停止当前操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusy());
       return;
     }
 
@@ -880,7 +903,7 @@ export class CodexCommandCoordinator {
         chatId,
         projectName: activeSession.projectName,
         projectPath: activeSession.projectPath,
-        displayName: this.buildClearedSnapshotName(activeSession.displayName),
+        displayName: this.buildClearedSnapshotName(LL, activeSession.displayName),
         displayNameSource: "manual",
         selectedModel: activeSession.selectedModel,
         selectedReasoningEffort: activeSession.selectedReasoningEffort,
@@ -911,12 +934,13 @@ export class CodexCommandCoordinator {
     await this.deps.safeSendMessage(
       chatId,
       previousThreadId
-        ? `已清空会话「${activeSession.displayName}」的上下文，并立即切换到新的 Codex 线程。上一线程已保留到归档会话中，可用 /sessions archived 查看。`
-        : `已重置会话「${activeSession.displayName}」并立即启动新的 Codex 线程。`
+        ? LL.success.threadClearedPrefix() + activeSession.displayName + LL.success.threadClearedSuffix()
+        : LL.success.threadResetPrefix() + activeSession.displayName + LL.success.threadResetSuffix()
     );
   }
 
   async handleThreadCommand(chatId: string, args: string): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -924,12 +948,12 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || !activeSession.threadId) {
-      await this.deps.safeSendMessage(chatId, "当前会话还没有 Codex 线程，请先完成一次任务。");
+      await this.deps.safeSendMessage(chatId, LL.errors.noThreadYet());
       return;
     }
 
     if (activeSession.status === "running") {
-      await this.deps.safeSendMessage(chatId, "当前项目仍在执行，请先等待完成或停止当前操作。");
+      await this.deps.safeSendMessage(chatId, LL.errors.projectBusy());
       return;
     }
 
@@ -938,7 +962,7 @@ export class CodexCommandCoordinator {
     if (!subcommand) {
       await this.deps.safeSendMessage(
         chatId,
-        "用法：/thread name <名称> 或 /thread meta branch=<分支> sha=<提交> origin=<URL> 或 /thread clean-terminals"
+        LL.errors.threadUsage()
       );
       return;
     }
@@ -948,20 +972,20 @@ export class CodexCommandCoordinator {
     if (subcommand === "name") {
       const nextName = rest.join(" ").trim();
       if (!nextName) {
-        await this.deps.safeSendMessage(chatId, "用法：/thread name <名称>");
+        await this.deps.safeSendMessage(chatId, LL.errors.threadNameUsage());
         return;
       }
 
       await appServer.setThreadName(activeSession.threadId, nextName);
       store.renameSession(activeSession.sessionId, nextName);
-      await this.deps.safeSendMessage(chatId, `会话标题已更新为：${nextName}`);
+      await this.deps.safeSendMessage(chatId, LL.success.threadNameUpdatedPrefix() + nextName);
       return;
     }
 
     if (subcommand === "meta") {
       const gitInfo = parseThreadMetadataTokens(rest);
       if (!gitInfo) {
-        await this.deps.safeSendMessage(chatId, "用法：/thread meta branch=<分支> sha=<提交> origin=<URL>");
+        await this.deps.safeSendMessage(chatId, LL.errors.threadMetaUsage());
         return;
       }
 
@@ -976,20 +1000,20 @@ export class CodexCommandCoordinator {
       ].filter((value): value is string => Boolean(value));
       await this.deps.safeSendMessage(
         chatId,
-        `已为会话「${activeSession.displayName}」更新线程元数据：${fragments.join(", ")}`
+        LL.success.threadMetaUpdatedPrefix() + activeSession.displayName + LL.success.threadMetaUpdatedSuffix() + fragments.join(", ")
       );
       return;
     }
 
     if (subcommand === "clean-terminals") {
       await appServer.cleanBackgroundTerminals(activeSession.threadId);
-      await this.deps.safeSendMessage(chatId, `已为会话「${activeSession.displayName}」清理当前线程的后台终端。`);
+      await this.deps.safeSendMessage(chatId, LL.success.terminalsCleanedPrefix() + activeSession.displayName + LL.success.terminalsCleanedSuffix());
       return;
     }
 
     await this.deps.safeSendMessage(
       chatId,
-      "用法：/thread name <名称> 或 /thread meta branch=<分支> sha=<提交> origin=<URL> 或 /thread clean-terminals"
+      LL.errors.threadUsage()
     );
   }
 
@@ -1012,22 +1036,31 @@ export class CodexCommandCoordinator {
   }
 
   private buildSessionProjectContextLines(
+    LL: ReturnType<typeof getTranslator>,
     session: Pick<SessionRow, "displayName" | "projectName" | "projectAlias">,
     title: string
   ): string[] {
     return [
-      `当前会话：${session.displayName}`,
-      `当前项目：${this.projectDisplayName(session)}`,
+      LL.labels.currentSessionPrefix() + session.displayName,
+      LL.labels.currentProjectPrefix() + this.projectDisplayName(session),
       title
     ];
   }
 
-  private buildModelSelectionText(sessionName: string, nextConfig: string): string {
-    return `已为会话「${sessionName}」设置模型：${nextConfig}\n下次任务开始时生效。`;
+  private buildModelSelectionText(
+    LL: ReturnType<typeof getTranslator>,
+    sessionName: string,
+    nextConfig: string
+  ): string {
+    return LL.success.modelSetPrefix() + sessionName + LL.success.modelSetSuffix() + nextConfig + LL.success.modelSetEffect();
   }
 
-  private async handleExpiredModelPicker(chatId: string, messageId: number): Promise<void> {
-    await this.deps.safeEditMessageText(chatId, messageId, "这个模型列表已过期，请重新发送 /model。");
+  private async handleExpiredModelPicker(
+    chatId: string,
+    messageId: number,
+    LL: ReturnType<typeof getTranslator>
+  ): Promise<void> {
+    await this.deps.safeEditMessageText(chatId, messageId, LL.errors.modelListExpired());
   }
 
   private async persistSessionModelSelection(
@@ -1037,6 +1070,7 @@ export class CodexCommandCoordinator {
     modelId: string | null,
     effort: ReasoningEffort | null
   ): Promise<void> {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const store = this.deps.getStore();
     if (!store) {
       return;
@@ -1049,7 +1083,7 @@ export class CodexCommandCoordinator {
       selectedModel: modelId,
       selectedReasoningEffort: effort
     });
-    const text = this.buildModelSelectionText(session.displayName, nextConfig);
+    const text = this.buildModelSelectionText(LL, session.displayName, nextConfig);
 
     if (messageId === null) {
       await this.deps.safeSendMessage(chatId, text);
@@ -1059,7 +1093,7 @@ export class CodexCommandCoordinator {
     await this.deps.safeEditMessageText(chatId, messageId, text);
   }
 
-  private getIdleRollbackSession(chatId: string): SessionRow | null {
+  private getIdleRollbackSession(chatId: string, LL: ReturnType<typeof getTranslator>): SessionRow | null {
     const store = this.deps.getStore();
     if (!store) {
       return null;
@@ -1067,12 +1101,12 @@ export class CodexCommandCoordinator {
 
     const activeSession = store.getActiveSession(chatId);
     if (!activeSession || !activeSession.threadId) {
-      void this.deps.safeSendMessage(chatId, "当前会话还没有可回滚的 Codex 线程。");
+      void this.deps.safeSendMessage(chatId, LL.errors.noThreadToRollback());
       return null;
     }
 
     if (activeSession.status === "running") {
-      void this.deps.safeSendMessage(chatId, "当前项目仍在执行，请先等待完成或停止当前操作。");
+      void this.deps.safeSendMessage(chatId, LL.errors.projectBusy());
       return null;
     }
 
@@ -1145,11 +1179,12 @@ export class CodexCommandCoordinator {
   }
 
   private summarizeRollbackTargetInput(threadId: string, turn: Record<string, unknown> | null): string | null {
+    const LL = getTranslator(this.deps.getUiLanguage());
     const turnId = getString(turn, "id");
     if (turnId) {
       const source = this.deps.getStore()?.getTurnInputSource(threadId, turnId);
       if (source?.sourceKind === "voice") {
-        return truncateText(`语音：${normalizeWhitespace(source.transcript)}`, HISTORY_TEXT_LIMIT);
+        return truncateText(LL.labels.voiceInputPrefix() + normalizeWhitespace(source.transcript), HISTORY_TEXT_LIMIT);
       }
     }
 
@@ -1175,7 +1210,7 @@ export class CodexCommandCoordinator {
         }
         case "image":
         case "localImage":
-          labels.push("图片输入");
+          labels.push(LL.labels.imageInput());
           break;
         case "skill":
           labels.push(`skill: ${getString(record, "name") ?? "unknown"}`);
@@ -1184,7 +1219,7 @@ export class CodexCommandCoordinator {
           labels.push(`引用: ${getString(record, "name") ?? getString(record, "path") ?? "unknown"}`);
           break;
         default:
-          labels.push("结构化输入");
+          labels.push(LL.labels.structuredInput());
           break;
       }
     }
@@ -1197,8 +1232,8 @@ export class CodexCommandCoordinator {
     return summary ? truncateText(summary, HISTORY_TEXT_LIMIT) : null;
   }
 
-  private buildClearedSnapshotName(displayName: string): string {
-    return displayName.startsWith("清空前：") ? displayName : `清空前：${displayName}`;
+  private buildClearedSnapshotName(LL: ReturnType<typeof getTranslator>, displayName: string): string {
+    return displayName.startsWith(LL.labels.preClearPrefix()) ? displayName : LL.labels.preClearPrefix() + displayName;
   }
 }
 
@@ -1313,12 +1348,12 @@ function findFirstInstallablePlugin(
   return null;
 }
 
-function formatMcpAuthStatus(status: "unsupported" | "notLoggedIn" | "bearerToken" | "oAuth"): string {
+function formatMcpAuthStatus(LL: ReturnType<typeof getTranslator>, status: "unsupported" | "notLoggedIn" | "bearerToken" | "oAuth"): string {
   switch (status) {
     case "unsupported":
-      return "不支持认证";
+      return LL.statuses.authNotSupported();
     case "notLoggedIn":
-      return "未登录";
+      return LL.statuses.notLoggedIn();
     case "bearerToken":
       return "Bearer Token";
     case "oAuth":
@@ -1328,7 +1363,7 @@ function formatMcpAuthStatus(status: "unsupported" | "notLoggedIn" | "bearerToke
   }
 }
 
-function formatRateLimitSummary(rateLimits: {
+function formatRateLimitSummary(LL: ReturnType<typeof getTranslator>, rateLimits: {
   limitName: string | null;
   primary: {
     usedPercent: number;
@@ -1348,29 +1383,29 @@ function formatRateLimitSummary(rateLimits: {
 
   const parts: string[] = [];
   if (rateLimits.limitName) {
-    parts.push(`额度：${rateLimits.limitName}`);
+    parts.push(LL.labels.rateLimitQuotaPrefix() + rateLimits.limitName);
   }
   if (rateLimits.planType) {
-    parts.push(`限额计划：${rateLimits.planType}`);
+    parts.push(LL.labels.rateLimitPlanPrefix() + rateLimits.planType);
   }
   if (rateLimits.primary) {
-    const window = rateLimits.primary.windowDurationMins ? `${rateLimits.primary.windowDurationMins} 分钟` : "当前窗口";
-    parts.push(`主额度使用：${rateLimits.primary.usedPercent}%（${window}）`);
+    const window = rateLimits.primary.windowDurationMins ? `${rateLimits.primary.windowDurationMins}${LL.labels.rateLimitWindowMinutesSuffix()}` : LL.labels.rateLimitWindowCurrent();
+    parts.push(LL.labels.rateLimitPrimaryUsagePrefix() + rateLimits.primary.usedPercent + LL.labels.rateLimitPrimaryUsageMiddle() + window + LL.labels.rateLimitPrimaryUsageSuffix());
   }
   if (rateLimits.credits) {
     parts.push(
       rateLimits.credits.unlimited
-        ? "Credits：无限"
-        : `Credits：${rateLimits.credits.balance ?? (rateLimits.credits.hasCredits ? "可用" : "不可用")}`
+        ? LL.labels.creditsUnlimited()
+        : LL.labels.creditsPrefix() + (rateLimits.credits.balance ?? (rateLimits.credits.hasCredits ? LL.labels.creditsAvailable() : LL.labels.creditsUnavailable()))
     );
   }
 
   return parts.length > 0 ? parts.join("\n") : null;
 }
 
-function buildRollbackSuccessText(numTurns: number, sessionName?: string): string {
+function buildRollbackSuccessText(LL: ReturnType<typeof getTranslator>, numTurns: number, sessionName?: string): string {
   const summary = sessionName
-    ? `已为会话「${sessionName}」回滚最近 ${numTurns} 个 turn。`
-    : `已回滚最近 ${numTurns} 个 turn。`;
-  return `${summary}\n注意：这不会自动撤销代理已经写到本地文件的改动。`;
+    ? LL.success.rollbackTurnsPrefix() + sessionName + LL.success.rollbackTurnsMiddle() + numTurns + LL.success.rollbackTurnsSuffix()
+    : LL.success.rollbackTurnsNoSessionPrefix() + numTurns + LL.success.rollbackTurnsNoSessionSuffix();
+  return `${summary}\n${LL.warnings.rollbackNoAutoRevert()}`;
 }

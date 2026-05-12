@@ -1,6 +1,8 @@
 import { classifyNotification } from "../codex/notification-classifier.js";
 import type { BridgePlatform } from "../core/domain/binding.js";
+import { getTranslator } from "../i18n/index.js";
 import type { BridgeStateStore } from "../state/store.js";
+import type { UiLanguage } from "../types.js";
 
 type GlobalRuntimeNotice = Extract<
   ReturnType<typeof classifyNotification>,
@@ -18,6 +20,7 @@ type GlobalRuntimeNotice = Extract<
 interface RuntimeNoticeBroadcasterDeps {
   getStore: () => BridgeStateStore | null;
   activePack: BridgePlatform;
+  getUiLanguage: () => UiLanguage;
   safeSendMessage: (chatId: string, text: string) => Promise<boolean>;
 }
 
@@ -30,7 +33,7 @@ export class RuntimeNoticeBroadcaster {
       return;
     }
 
-    const message = formatGlobalRuntimeNotice(notification);
+    const message = this.formatGlobalRuntimeNotice(notification);
     if (!message) {
       return;
     }
@@ -47,29 +50,30 @@ export class RuntimeNoticeBroadcaster {
       }
     }
   }
-}
 
-export function formatGlobalRuntimeNotice(notification: GlobalRuntimeNotice): string | null {
-  switch (notification.kind) {
-    case "config_warning":
-      return notification.summary
-        ? `Codex 配置警告：${notification.summary}${notification.detail ? `\n${notification.detail}` : ""}`
-        : null;
-    case "deprecation_notice":
-      return notification.summary
-        ? `Codex 弃用提示：${notification.summary}${notification.detail ? `\n${notification.detail}` : ""}`
-        : null;
-    case "model_rerouted":
-      if (!notification.fromModel || !notification.toModel) {
+  private formatGlobalRuntimeNotice(notification: GlobalRuntimeNotice): string | null {
+    const LL = getTranslator(this.deps.getUiLanguage());
+    switch (notification.kind) {
+      case "config_warning":
+        return notification.summary
+          ? `${LL.notices.configWarningPrefix()}${notification.summary}${notification.detail ? `\n${notification.detail}` : ""}`
+          : null;
+      case "deprecation_notice":
+        return notification.summary
+          ? `${LL.notices.deprecationWarningPrefix()}${notification.summary}${notification.detail ? `\n${notification.detail}` : ""}`
+          : null;
+      case "model_rerouted":
+        if (!notification.fromModel || !notification.toModel) {
+          return null;
+        }
+        return `${LL.notices.modelAdjustedPrefix()}${notification.fromModel}${LL.notices.modelAdjustedArrow()}${notification.toModel}${notification.reason ? `${LL.notices.modelAdjustedReasonPrefix()}${notification.reason}${LL.notices.modelAdjustedReasonSuffix()}` : ""}`;
+      case "skills_changed":
+        return LL.notices.skillsRefreshed();
+      case "thread_compacted":
+      case "thread_compaction_completed":
+        return LL.notices.threadCompacted();
+      default:
         return null;
-      }
-      return `Codex 已调整模型：${notification.fromModel} -> ${notification.toModel}${notification.reason ? ` (${notification.reason})` : ""}`;
-    case "skills_changed":
-      return "Codex 技能列表已刷新。";
-    case "thread_compacted":
-    case "thread_compaction_completed":
-      return "Codex 线程上下文已压缩。";
-    default:
-      return null;
+    }
   }
 }
