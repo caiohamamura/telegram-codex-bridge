@@ -1273,9 +1273,9 @@ export class TurnCoordinator {
   } | undefined {
     if (saved.kind === "plan_result") {
       return controls.collapsible
-        ? buildPlanResultReplyMarkup(controls)
+        ? buildPlanResultReplyMarkup({ ...controls, language: this.deps.getUiLanguage() })
         : {
-          inline_keyboard: buildPlanResultActionRows(saved.answerId)
+          inline_keyboard: buildPlanResultActionRows(saved.answerId, this.deps.getUiLanguage())
         };
     }
 
@@ -1284,7 +1284,8 @@ export class TurnCoordinator {
     }
 
     return buildFinalAnswerReplyMarkup({
-      ...controls
+      ...controls,
+      language: this.deps.getUiLanguage()
     });
   }
 
@@ -1297,15 +1298,19 @@ export class TurnCoordinator {
       return createFailedSurfaceOperationResult("terminal_result_deferred_notice", "send_failed");
     }
 
-    const renderedNotice = createDeferredTerminalNoticeView(saved);
+    const LL = getTranslator(this.deps.getUiLanguage());
+    const renderedNotice = createDeferredTerminalNoticeView(saved, {
+      finalAnswerHtml: `<i>${LL.finalAnswer.finalAnswerDeferred()}</i>`,
+      planResultHtml: `<i>${LL.finalAnswer.planResultDeferred()}</i>`
+    });
     const notice = store.createRuntimeNotice({
       chatId: activeTurn.chatId,
       type: "terminal_delivery_deferred",
       message: renderedNotice.html,
       parseMode: "HTML",
       replyMarkup: saved.kind === "plan_result"
-        ? buildPlanResultReplyMarkup(renderedNotice.controls)
-        : buildFinalAnswerReplyMarkup(renderedNotice.controls),
+        ? buildPlanResultReplyMarkup({ ...renderedNotice.controls, language: this.deps.getUiLanguage() })
+        : buildFinalAnswerReplyMarkup({ ...renderedNotice.controls, language: this.deps.getUiLanguage() }),
       sessionId: activeTurn.sessionId,
       turnId: activeTurn.turnId
     });
@@ -1314,8 +1319,8 @@ export class TurnCoordinator {
       chatId: activeTurn.chatId,
       html: renderedNotice.html,
       replyMarkup: saved.kind === "plan_result"
-        ? buildPlanResultReplyMarkup(renderedNotice.controls)
-        : buildFinalAnswerReplyMarkup(renderedNotice.controls),
+        ? buildPlanResultReplyMarkup({ ...renderedNotice.controls, language: this.deps.getUiLanguage() })
+        : buildFinalAnswerReplyMarkup({ ...renderedNotice.controls, language: this.deps.getUiLanguage() }),
       requirements: {
         requiresCallbacks: true,
         requiresRichTextPreview: true
@@ -1338,15 +1343,19 @@ export class TurnCoordinator {
   private getFinalAnswerRenderContext(sessionId: string): {
     sessionName?: string | null;
     projectName?: string | null;
+    language: UiLanguage;
   } {
     const session = this.deps.getStore()?.getSessionById(sessionId) ?? null;
     if (!session) {
-      return {};
+      return {
+        language: this.deps.getUiLanguage()
+      };
     }
 
     return {
       sessionName: session.displayName,
-      projectName: session.projectAlias?.trim() || session.projectName
+      projectName: session.projectAlias?.trim() || session.projectName,
+      language: this.deps.getUiLanguage()
     };
   }
 

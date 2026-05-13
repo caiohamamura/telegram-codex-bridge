@@ -20,19 +20,23 @@ export function createTerminalResultDeliveryView(
 }
 
 export function createDeferredTerminalNoticeView(
-  saved: PersistedTerminalResultRecord
+  saved: PersistedTerminalResultRecord,
+  copy?: {
+    finalAnswerHtml: string;
+    planResultHtml: string;
+  }
 ): TerminalResultDeliveryView {
   if (saved.kind === "plan_result") {
     return {
       kind: "plan_result",
-      html: "<i>方案结果暂未送达。点击“展开方案”重新渲染。</i>",
+      html: copy?.planResultHtml ?? "<i>方案结果暂未送达。点击“展开方案”重新渲染。</i>",
       controls: createTerminalResultControls(saved)
     };
   }
 
   return {
     kind: "final_answer",
-    html: "<i>最终答复暂未送达。点击“展开全文”重新渲染。</i>",
+    html: copy?.finalAnswerHtml ?? "<i>最终答复暂未送达。点击“展开全文”重新渲染。</i>",
     controls: createTerminalResultControls(saved)
   };
 }

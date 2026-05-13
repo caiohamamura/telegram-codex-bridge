@@ -735,6 +735,14 @@ type RootTranslation = {
 		 */
 		planConsumed: string
 		/**
+		 * 最​终​答​复​暂​未​送​达​。​点​击​“​展​开​全​文​”​重​新​渲​染​。
+		 */
+		finalAnswerDeferred: string
+		/**
+		 * 方​案​结​果​暂​未​送​达​。​点​击​“​展​开​方​案​”​重​新​渲​染​。
+		 */
+		planResultDeferred: string
+		/**
 		 * 已​折​叠​，​共​ 
 		 */
 		collapsedMultiPagePrefix: string
@@ -3701,6 +3709,14 @@ export type TranslationFunctions = {
 		 * 已开始实施。
 		 */
 		planConsumed: () => LocalizedString
+		/**
+		 * 最终答复暂未送达。点击“展开全文”重新渲染。
+		 */
+		finalAnswerDeferred: () => LocalizedString
+		/**
+		 * 方案结果暂未送达。点击“展开方案”重新渲染。
+		 */
+		planResultDeferred: () => LocalizedString
 		/**
 		 * 已折叠，共 
 		 */

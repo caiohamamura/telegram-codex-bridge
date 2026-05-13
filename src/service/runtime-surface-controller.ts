@@ -3286,7 +3286,8 @@ export class RuntimeSurfaceController {
         buildFinalAnswerReplyMarkup({
           answerId,
           totalPages: view.pages.length,
-          expanded: false
+          expanded: false,
+          language: this.deps.getUiLanguage()
         })
       );
       await this.finishPersistedFinalAnswerRender(callbackQueryId, answerId, messageId, result, {
@@ -3313,7 +3314,8 @@ export class RuntimeSurfaceController {
           answerId,
           totalPages: view.pages.length,
           expanded: true,
-          currentPage: page
+          currentPage: page,
+          language: this.deps.getUiLanguage()
         })
       );
     await this.finishPersistedFinalAnswerRender(callbackQueryId, answerId, messageId, result, {
@@ -3355,7 +3357,8 @@ export class RuntimeSurfaceController {
           answerId,
           totalPages: view.pages.length,
           expanded: false,
-          primaryActionConsumed: view.primaryActionConsumed
+          primaryActionConsumed: view.primaryActionConsumed,
+          language: this.deps.getUiLanguage()
         })
       );
       await this.finishPersistedFinalAnswerRender(callbackQueryId, answerId, messageId, result);
@@ -3378,7 +3381,8 @@ export class RuntimeSurfaceController {
         totalPages: view.pages.length,
         expanded: true,
         currentPage: page,
-        primaryActionConsumed: view.primaryActionConsumed
+        primaryActionConsumed: view.primaryActionConsumed,
+        language: this.deps.getUiLanguage()
       })
     );
     await this.finishPersistedFinalAnswerRender(callbackQueryId, answerId, messageId, result);
@@ -3422,8 +3426,11 @@ export class RuntimeSurfaceController {
       const result = await this.deps.safeEditHtmlMessageText(
         chatId,
         messageId,
-        buildRecentOutputEntryHtml(entryView),
-        buildRecentOutputReplyMarkup(createRecentOutputControlsView(view))
+        buildRecentOutputEntryHtml({ ...entryView, language: this.deps.getUiLanguage() }),
+        buildRecentOutputReplyMarkup({
+          ...createRecentOutputControlsView(view),
+          language: this.deps.getUiLanguage()
+        })
       );
       await this.finishBridgeOwnedCallbackRender(callbackQueryId, result);
       return;
@@ -3440,10 +3447,13 @@ export class RuntimeSurfaceController {
       chatId,
       messageId,
       view.kind === "plan_result" ? this.buildPlanResultHtml(pageHtml, view.primaryActionConsumed) : pageHtml,
-      buildRecentOutputReplyMarkup(createRecentOutputControlsView(view, {
-        expanded: true,
-        currentPage: page
-      }))
+      buildRecentOutputReplyMarkup({
+        ...createRecentOutputControlsView(view, {
+          expanded: true,
+          currentPage: page
+        }),
+        language: this.deps.getUiLanguage()
+      })
     );
     await this.finishBridgeOwnedCallbackRender(callbackQueryId, result);
   }

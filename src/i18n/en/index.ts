@@ -201,6 +201,8 @@ const en = {
     expandPlan: "Expand plan",
     collapsePlan: "Collapse plan",
     planConsumed: "Implementation started.",
+    finalAnswerDeferred: "Final answer was deferred. Tap \"Expand\" to render it again.",
+    planResultDeferred: "Plan result was deferred. Tap \"Expand plan\" to render it again.",
     collapsedMultiPagePrefix: "Collapsed, ",
     collapsedMultiPageMiddle: " pages, tap ",
     collapsedMultiPageSuffix: " to view.",

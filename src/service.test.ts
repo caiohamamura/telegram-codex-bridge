@@ -1847,6 +1847,7 @@ test("long final answers send one collapsible preview and persist the rendered p
       throw new Error("expected pending authorization candidate");
     }
     store.confirmPendingAuthorization(candidate);
+    store.setUiLanguage("en");
     const session = createSession(store, "1");
 
     (service as any).api = {
@@ -1893,8 +1894,9 @@ test("long final answers send one collapsible preview and persist the rendered p
 
     const finalMessages = sent.filter((entry) => entry.parseMode === "HTML" && !isRuntimeStatusText(entry.text));
     assert.equal(finalMessages.length, 1);
-    assert.match(finalMessages[0]?.text ?? "", /已折叠/u);
-    assert.equal(finalMessages[0]?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "展开全文");
+    assert.match(finalMessages[0]?.text ?? "", /Collapsed/u);
+    assert.doesNotMatch(finalMessages[0]?.text ?? "", /已折叠|展开全文|查看剩余内容/u);
+    assert.equal(finalMessages[0]?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "Expand");
 
     const views = store.listFinalAnswerViews("1");
     assert.equal(views.length, 1);
@@ -1915,9 +1917,9 @@ test("long final answers send one collapsible preview and persist the rendered p
 
     assert.equal(callbackAnswers.at(-1), undefined);
     assert.equal(edited.at(-1)?.messageId, finalMessages[0]?.messageId);
-    assert.match(edited.at(-1)?.text ?? "", /第 1\/\d+ 页/u);
-    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "下一页");
-    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[1]?.text, "收起");
+    assert.match(edited.at(-1)?.text ?? "", /Page 1\/\d+/u);
+    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "Next");
+    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[1]?.text, "Collapse");
 
     await (service as any).handleCallback({
       id: "callback-final-next",
@@ -1932,8 +1934,8 @@ test("long final answers send one collapsible preview and persist the rendered p
     });
 
     assert.equal(callbackAnswers.at(-1), undefined);
-    assert.match(edited.at(-1)?.text ?? "", /第 2\/\d+ 页/u);
-    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "上一页");
+    assert.match(edited.at(-1)?.text ?? "", /Page 2\/\d+/u);
+    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "Previous");
 
     await (service as any).handleCallback({
       id: "callback-final-close",
@@ -1948,8 +1950,9 @@ test("long final answers send one collapsible preview and persist the rendered p
     });
 
     assert.equal(callbackAnswers.at(-1), undefined);
-    assert.match(edited.at(-1)?.text ?? "", /已折叠/u);
-    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "展开全文");
+    assert.match(edited.at(-1)?.text ?? "", /Collapsed/u);
+    assert.doesNotMatch(edited.at(-1)?.text ?? "", /已折叠|展开全文|查看剩余内容/u);
+    assert.equal(edited.at(-1)?.replyMarkup?.inline_keyboard?.[0]?.[0]?.text, "Expand");
   } finally {
     await cleanup();
   }

@@ -201,6 +201,8 @@ const zh = {
     expandPlan: "展开方案",
     collapsePlan: "收起方案",
     planConsumed: "已开始实施。",
+    finalAnswerDeferred: "最终答复暂未送达。点击“展开全文”重新渲染。",
+    planResultDeferred: "方案结果暂未送达。点击“展开方案”重新渲染。",
     collapsedMultiPagePrefix: "已折叠，共 ",
     collapsedMultiPageMiddle: " 页，点击",
     collapsedMultiPageSuffix: "查看。",
