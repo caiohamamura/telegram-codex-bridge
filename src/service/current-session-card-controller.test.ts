@@ -143,7 +143,10 @@ test("CurrentSessionCardController sends and pins a new card for the active sess
     await controller.syncForChat("chat-1", "session_switched");
 
     assert.equal(sent.length, 1);
-    assert.match(sent[0]?.text ?? "", /^Project One \/ Session One/u);
+    assert.match(
+      sent[0]?.text ?? "",
+      /^<b>当前会话<\/b>\n<b>项目：<\/b> Project One\n<b>会话名：<\/b> Session One/u
+    );
     assert.deepEqual(pinned, [{ chatId: "chat-1", messageId: 700 }]);
     assert.equal(store.getCurrentSessionCard("chat-1")?.messageId, 700);
     assert.equal(store.getCurrentSessionCard("chat-1")?.sessionId, session.sessionId);

@@ -811,7 +811,7 @@ test("service startup restores and pins the current session card for the active 
 
     runtimeStore = (service as any).store as BridgeStateStore;
     assert.equal(sent.length, 1);
-    assert.match(sent[0]?.text ?? "", /^Project One \/ Project One/u);
+    assert.match(sent[0]?.text ?? "", /^<b>当前会话<\/b>\n<b>项目：<\/b> Project One\n<b>会话名：<\/b> Project One/u);
     assert.deepEqual(pinned, [{ chatId: "chat-1", messageId: 1701 }]);
     assert.equal(runtimeStore.getCurrentSessionCard("chat-1")?.messageId, 1701);
     assert.equal(runtimeStore.getCurrentSessionCard("chat-1")?.sessionId, session.sessionId);
@@ -5426,7 +5426,17 @@ test("use command leaves the existing runtime hub in place when another session 
     const idleSessionIndex = store.listSessions("chat-1").findIndex((entry) => entry.sessionId === idleSession.sessionId) + 1;
     await (service as any).routeCommand("chat-1", "use", `${idleSessionIndex}`);
 
-    assert.equal(sent[1]?.text, "Project Idle / Project Idle\n空闲 · 配置 默认模型 + 默认 / 生效 默认模型 + 默认");
+    assert.equal(
+      sent[1]?.text,
+      [
+        "<b>当前会话</b>",
+        "<b>项目：</b> Project Idle",
+        "<b>会话名：</b> Project Idle",
+        "<b>状态：</b> 空闲",
+        "<b>模型配置：</b> 默认模型 + 默认",
+        "<b>模型生效：</b> 默认模型 + 默认"
+      ].join("\n")
+    );
     assert.equal(sent[1]?.parseMode, "HTML");
     assert.equal(
       sent[2]?.text,
@@ -5495,7 +5505,17 @@ test("use command does not reanchor a background running session after it become
     const runningSessionIndex = store.listSessions("chat-1").findIndex((entry) => entry.sessionId === runningSession.sessionId) + 1;
     await (service as any).routeCommand("chat-1", "use", `${runningSessionIndex}`);
 
-    assert.equal(sent[1]?.text, "Project One / Project One\n执行中 · 配置 默认模型 + 默认 / 生效 默认模型 + 默认");
+    assert.equal(
+      sent[1]?.text,
+      [
+        "<b>当前会话</b>",
+        "<b>项目：</b> Project One",
+        "<b>会话名：</b> Project One",
+        "<b>状态：</b> 执行中",
+        "<b>模型配置：</b> 默认模型 + 默认",
+        "<b>模型生效：</b> 默认模型 + 默认"
+      ].join("\n")
+    );
     assert.equal(sent[1]?.parseMode, "HTML");
     assert.equal(
       sent[2]?.text,
@@ -5687,7 +5707,7 @@ test("language callback refreshes the current session card in the selected langu
     assert.equal(callbackAnswers.at(-1), "Saved.");
     const cardEdit = edited.find((entry) => entry.messageId === 777);
     assert.ok(cardEdit);
-    assert.match(cardEdit?.text ?? "", /^Project One \/ Project One/u);
+    assert.match(cardEdit?.text ?? "", /^<b>Current Session<\/b>\n<b>Project:<\/b> Project One\n<b>Session:<\/b> Project One/u);
     assert.deepEqual(pinned, [{ messageId: 777 }]);
   } finally {
     await cleanup();

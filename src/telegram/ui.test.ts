@@ -463,7 +463,7 @@ test("buildWhereText explains when the Codex thread has not been created yet", (
   );
 });
 
-test("buildCurrentSessionCardText renders a compact Chinese current-session card", () => {
+test("buildCurrentSessionCardText renders a labeled Chinese current-session card", () => {
   const text = buildCurrentSessionCardText(
     createSession({
       displayName: "Session <Alpha>",
@@ -476,8 +476,12 @@ test("buildCurrentSessionCardText renders a compact Chinese current-session card
   assert.equal(
     text,
     [
-      "Alias &amp; One / Session &lt;Alpha&gt;",
-      "空闲 · 配置 默认模型 + 默认 / 生效 默认模型 + 默认"
+      "<b>当前会话</b>",
+      "<b>项目：</b> Alias &amp; One",
+      "<b>会话名：</b> Session &lt;Alpha&gt;",
+      "<b>状态：</b> 空闲",
+      "<b>模型配置：</b> 默认模型 + 默认",
+      "<b>模型生效：</b> 默认模型 + 默认"
     ].join("\n")
   );
 });
@@ -494,8 +498,12 @@ test("buildCurrentSessionCardText renders the English current-session card", () 
   assert.equal(
     text,
     [
-      "Project &amp; One / Session &lt;Alpha&gt;",
-      "Idle · configured Default model + default / effective Default model + default"
+      "<b>Current Session</b>",
+      "<b>Project:</b> Project &amp; One",
+      "<b>Session:</b> Session &lt;Alpha&gt;",
+      "<b>State:</b> Idle",
+      "<b>Model configured:</b> Default model + default",
+      "<b>Model effective:</b> Default model + default"
     ].join("\n")
   );
 });

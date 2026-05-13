@@ -401,11 +401,16 @@ export function buildCurrentSessionCardText(
   language: UiLanguage,
   modelState?: SessionModelDisplayState
 ): string {
+  const LL = getTranslator(language);
   const projectName = displayProjectName(session.projectName, session.projectAlias);
   const state = resolveModelDisplayState(session, modelState);
   return [
-    `${escapeHtml(projectName)} / ${escapeHtml(session.displayName)}`,
-    `${escapeHtml(formatSessionStateForCard(session, language))} · ${escapeHtml(formatSessionModelReasoningConfigForCard(state, language))}`
+    formatHtmlHeading(LL.where.title()),
+    formatHtmlField(LL.where.project(), projectName),
+    formatHtmlField(LL.where.sessionName(), session.displayName),
+    formatHtmlField(LL.where.state(), formatSessionStateForCard(session, language)),
+    formatHtmlField(LL.where.modelConfigured(), formatModelReasoning(state.configuredModel, state.configuredReasoningEffort, language)),
+    formatHtmlField(LL.where.modelEffective(), formatModelReasoning(state.effectiveModel, state.effectiveReasoningEffort, language))
   ].join("\n");
 }
 
